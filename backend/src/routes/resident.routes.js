@@ -3,6 +3,7 @@ const router = express.Router();
 const residentController = require('../controllers/resident.controller');
 const { authenticate, authorizeRoles } = require('../middleware/auth.middleware');
 const upload = require('../middleware/upload.middleware');
+const { reportUploadLimiter } = require('../middleware/rateLimiter');
 
 // All resident routes require authentication and the resident role
 router.use(authenticate);
@@ -19,7 +20,7 @@ router.get('/notifications', residentController.getNotifications);
 router.get('/leaderboard', residentController.getLeaderboard);
 
 // Reports
-router.post('/reports', upload.array('images', 3), residentController.submitReport);
+router.post('/reports', reportUploadLimiter, upload.array('images', 3), residentController.submitReport);
 
 // Credits
 router.get('/credits', residentController.getCredits);
