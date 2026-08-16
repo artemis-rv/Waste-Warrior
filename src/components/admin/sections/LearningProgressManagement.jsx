@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Download, RotateCcw, Award, Users, BookOpen } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LearningProgressManagement() {
@@ -38,17 +38,12 @@ export default function LearningProgressManagement() {
     try {
       setLoading(true);
 
-      const [usersResult, modulesResult, progressResult, certificatesResult] = await Promise.all([
-        supabase.from('users').select('id, full_name, email, created_at'),
-        supabase.from('learning_modules').select('*'),
-        supabase.from('user_learning_progress').select('*'),
-        supabase.from('certifications').select('*'),
-      ]);
+      const data = await fetchApi('/api/admin/learning');
 
-      setUsers(usersResult.data || []);
-      setModules(modulesResult.data || []);
-      setProgress(progressResult.data || []);
-      setCertificates(certificatesResult.data || []);
+      setUsers(data.users || []);
+      setModules(data.modules || []);
+      setProgress(data.progress || []);
+      setCertificates(data.certs || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -77,12 +72,9 @@ export default function LearningProgressManagement() {
 
   const handleResetProgress = async (userId) => {
     try {
-      const { error } = await supabase
-        .from('user_learning_progress')
-        .delete()
-        .eq('user_id', userId);
-
-      if (error) throw error;
+      await fetchApi(`/api/admin/learning/${userId}/reset`, {
+        method: 'DELETE'
+      });
 
       toast({
         title: t('common.success'),

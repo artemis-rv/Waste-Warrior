@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, Gift, History, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { fetchApi } from '@/lib/api';
 
 export default function CreditsSystem() {
   const { user, userProfile } = useAuth();
@@ -19,40 +20,17 @@ export default function CreditsSystem() {
 
   useEffect(() => {
     if (user) {
-      fetchCreditsHistory();
-      fetchRedeemHistory();
+      fetchCreditsData();
     }
   }, [user]);
 
-  const fetchCreditsHistory = async () => {
+  const fetchCreditsData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('credits_log')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setCreditsHistory(data || []);
+      const data = await fetchApi('/resident/credits', { method: 'GET' });
+      setCreditsHistory(data.history || []);
+      setRedeemHistory(data.redeems || []);
     } catch (error) {
-      console.error('Error fetching credits history:', error);
-    }
-  };
-
-  const fetchRedeemHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('redeems')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-      setRedeemHistory(data || []);
-    } catch (error) {
-      console.error('Error fetching redeem history:', error);
+      console.error('Error fetching credits data:', error);
     }
   };
 
@@ -78,47 +56,18 @@ export default function CreditsSystem() {
     setLoading(true);
 
     try {
-      // Generate unique redeem code
-      const code = `GC${Date.now().toString().slice(-6)}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-
-      // Create redeem record
-      const { data, error } = await supabase
-        .from('redeems')
-        .insert({
-          user_id: user.id,
-          code: code,
-          credits_used: creditsToRedeem,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Deduct credits from user
-      await supabase
-        .from('users')
-        .update({ credits: userProfile.credits - creditsToRedeem })
-        .eq('id', user.id);
-
-      // Log the credit usage
-      await supabase
-        .from('credits_log')
-        .insert({
-          user_id: user.id,
-          amount: -creditsToRedeem,
-          reason: 'Credits redeemed for coupon',
-          reference_id: data.id
-        });
+      const data = await fetchApi('/resident/credits/redeem', {
+        method: 'POST',
+        body: JSON.stringify({ amount: creditsToRedeem })
+      });
 
       toast({
         title: t('credits.redeemSuccessTitle') || 'Redeem code generated!',
-        description: t('credits.redeemSuccessDesc', { code }) || `Your redeem code: ${code}. Save this code to use at participating stores.`
+        description: t('credits.redeemSuccessDesc', { code: data.code }) || `Your redeem code: ${data.code}. Save this code to use at participating stores.`
       });
 
       // Refresh data
-      fetchCreditsHistory();
-      fetchRedeemHistory();
+      fetchCreditsData();
 
     } catch (error) {
       console.error('Error generating redeem code:', error);

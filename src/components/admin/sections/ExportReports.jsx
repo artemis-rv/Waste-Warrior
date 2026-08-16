@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Download, FileText, TrendingUp } from 'lucide-react';
 
@@ -24,18 +24,17 @@ export default function ExportReports() {
   }, []);
 
   const fetchStats = async () => {
-    const [reportsRes, creditsRes, usersRes] = await Promise.all([
-      supabase.from('reports').select('status', { count: 'exact' }),
-      supabase.from('users').select('credits'),
-      supabase.from('users').select('id', { count: 'exact' })
-    ]);
-
-    const totalReports = reportsRes.count || 0;
-    const completedReports = reportsRes.data?.filter(r => r.status === 'completed').length || 0;
-    const totalCredits = creditsRes.data?.reduce((sum, u) => sum + (u.credits || 0), 0) || 0;
-    const activeUsers = usersRes.count || 0;
-
-    setStats({ totalReports, completedReports, totalCredits, activeUsers });
+    try {
+      const data = await fetchApi('/api/admin/dashboard');
+      setStats({
+        totalReports: data.totalReports,
+        completedReports: data.completedReports,
+        totalCredits: data.totalCredits,
+        activeUsers: data.totalUsers
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const generateCSV = (data, headers) => {
@@ -55,11 +54,8 @@ export default function ExportReports() {
 
   const exportMonthlyStats = async () => {
     try {
-      const { data: reports } = await supabase
-        .from('reports')
-        .select('id, title, status, created_at, completed_at, users(full_name, email)')
-        .gte('created_at', startDate || '2020-01-01')
-        .lte('created_at', endDate || new Date().toISOString());
+      const qs = `?type=monthly&startDate=${startDate || '2020-01-01'}&endDate=${endDate || new Date().toISOString()}`;
+      const reports = await fetchApi('/api/admin/reports/export' + qs);
 
       const headers = ['title', 'reporter_name', 'reporter_email', 'status', 'created_at', 'completed_at'];
       const data = reports?.map(r => ({
@@ -81,12 +77,8 @@ export default function ExportReports() {
 
   const exportCreditsDistributed = async () => {
     try {
-      const { data } = await supabase
-        .from('credit_audit_log')
-        .select('*, users(full_name, email)')
-        .gte('created_at', startDate || '2020-01-01')
-        .lte('created_at', endDate || new Date().toISOString())
-        .order('created_at', { ascending: false });
+      const qs = `?type=credits&startDate=${startDate || '2020-01-01'}&endDate=${endDate || new Date().toISOString()}`;
+      const data = await fetchApi('/api/admin/reports/export' + qs);
 
       const headers = ['user_name', 'user_email', 'amount', 'action_type', 'reason', 'created_at'];
       const csvData = data?.map(log => ({
@@ -108,12 +100,8 @@ export default function ExportReports() {
 
   const exportResolvedReports = async () => {
     try {
-      const { data } = await supabase
-        .from('reports')
-        .select('*, users(full_name, email), worker:users!reports_assigned_to_fkey(full_name)')
-        .eq('status', 'completed')
-        .gte('completed_at', startDate || '2020-01-01')
-        .lte('completed_at', endDate || new Date().toISOString());
+      const qs = `?type=resolved&startDate=${startDate || '2020-01-01'}&endDate=${endDate || new Date().toISOString()}`;
+      const data = await fetchApi('/api/admin/reports/export' + qs);
 
       const headers = ['title', 'reporter', 'worker', 'created_at', 'completed_at', 'is_verified'];
       const csvData = data?.map(r => ({

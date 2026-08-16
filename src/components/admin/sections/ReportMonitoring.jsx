@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
@@ -29,21 +29,21 @@ export default function ReportMonitoring() {
   }, []);
 
   const fetchReports = async () => {
-    const { data } = await supabase
-      .from('reports')
-      .select('*, users!reports_user_id_fkey(full_name, email), assigned_worker:users!reports_assigned_to_fkey(full_name)')
-      .order('created_at', { ascending: false });
-    
-    if (data) setReports(data);
+    try {
+      const data = await fetchApi('/api/admin/reports');
+      setReports(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const fetchWorkers = async () => {
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('role', 'worker');
-    
-    if (data) setWorkers(data);
+    try {
+      const data = await fetchApi('/api/admin/workers');
+      setWorkers(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const assignReport = async () => {
@@ -52,21 +52,21 @@ export default function ReportMonitoring() {
       return;
     }
 
-    const { error } = await supabase
-      .from('reports')
-      .update({
-        assigned_to: assignData.workerId,
-        deadline: assignData.deadline || null,
-        status: 'assigned'
-      })
-      .eq('id', selectedReport.id);
+    try {
+      await fetchApi('/api/admin/pickups/assign', {
+        method: 'POST',
+        body: JSON.stringify({
+          workerId: assignData.workerId,
+          reportId: selectedReport.id,
+          deadline: assignData.deadline || null
+        })
+      });
 
-    if (!error) {
       toast.success('Report assigned to worker');
       fetchReports();
       setAssignDialogOpen(false);
       setAssignData({ workerId: '', deadline: '' });
-    } else {
+    } catch (error) {
       toast.error('Failed to assign report');
     }
   };
@@ -77,51 +77,18 @@ export default function ReportMonitoring() {
       return;
     }
 
-    const penalty = parseInt(penaltyAmount);
-    
-    // Get worker's current credits
-    const { data: workerData } = await supabase
-      .from('users')
-      .select('credits')
-      .eq('id', selectedReport.assigned_to)
-      .single();
-
-    const newCredits = (workerData?.credits || 0) - penalty;
-
-    // Apply penalty
-    const { error: penaltyError } = await supabase
-      .from('users')
-      .update({ credits: newCredits })
-      .eq('id', selectedReport.assigned_to);
-
-    if (penaltyError) {
-      toast.error('Failed to apply penalty');
-      return;
+    try {
+      await fetchApi(`/api/admin/reports/${selectedReport.id}/escalate`, {
+        method: 'PUT',
+        body: JSON.stringify({ penaltyAmount: parseInt(penaltyAmount) })
+      });
+      toast.success('Case escalated and penalty applied');
+      fetchReports();
+      setEscalateDialogOpen(false);
+      setPenaltyAmount('');
+    } catch (error) {
+      toast.error('Failed to escalate case');
     }
-
-    // Log penalty
-    await supabase
-      .from('credit_audit_log')
-      .insert([{
-        user_id: selectedReport.assigned_to,
-        amount: -penalty,
-        reason: `Penalty for failing to complete report: ${selectedReport.title}`,
-        action_type: 'subtract'
-      }]);
-
-    // Update report status
-    await supabase
-      .from('reports')
-      .update({ 
-        status: 'escalated',
-        assigned_to: null
-      })
-      .eq('id', selectedReport.id);
-
-    toast.success('Case escalated and penalty applied');
-    fetchReports();
-    setEscalateDialogOpen(false);
-    setPenaltyAmount('');
   };
 
   const getStatusColor = (status) => {

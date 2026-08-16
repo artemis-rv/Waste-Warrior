@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -54,15 +54,15 @@ export default function MapTracking() {
 
   const fetchData = async () => {
     try {
-      const [workersRes, reportsRes, pointsRes] = await Promise.all([
-        supabase.from('users').select('*').eq('role', 'worker'),
-        supabase.from('reports').select('*'),
-        supabase.from('collection_points').select('*')
+      const [workersData, reportsData, pointsData] = await Promise.all([
+        fetchApi('/api/admin/workers'),
+        fetchApi('/api/admin/reports'),
+        fetchApi('/api/admin/collection-points')
       ]);
 
-      if (workersRes.data) setWorkers(workersRes.data);
-      if (reportsRes.data) setReports(reportsRes.data);
-      if (pointsRes.data) setCollectionPoints(pointsRes.data);
+      setWorkers(workersData || []);
+      setReports(reportsData || []);
+      setCollectionPoints(pointsData || []);
     } catch (error) {
       console.error('Error fetching map data:', error);
       toast.error('Failed to load map data');

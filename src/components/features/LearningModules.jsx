@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import VideoPlayer from './VideoPlayer';
 import QuizModal from './QuizModal';
 import CertificateGenerator from './CertificateGenerator';
+import { fetchApi } from '@/lib/api';
 
 export default function LearningModules() {
   const { userProfile } = useAuth();
@@ -31,25 +32,11 @@ export default function LearningModules() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: modulesData } = await supabase
-        .from('learning_modules')
-        .select('*')
-        .order('order_index', { ascending: true });
+      const data = await fetchApi('/resident/learning', { method: 'GET' });
 
-      const { data: progressData } = await supabase
-        .from('user_learning_progress')
-        .select('*')
-        .eq('user_id', userProfile.id);
-
-      const { data: certData } = await supabase
-        .from('certifications')
-        .select('*')
-        .eq('user_id', userProfile.id)
-        .single();
-
-      setModules(modulesData || []);
-      setUserProgress(progressData || []);
-      setCertificate(certData);
+      setModules(data.modules || []);
+      setUserProgress(data.progress || []);
+      setCertificate(data.certificate || null);
 
     } catch (error) {
       console.error('Error:', error);
@@ -64,16 +51,10 @@ export default function LearningModules() {
 
   const handleVideoComplete = async (moduleId) => {
     try {
-      const { error } = await supabase
-        .from('user_learning_progress')
-        .upsert({
-          user_id: userProfile.id,
-          module_id: moduleId,
-          is_video_watched: true,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id, module_id' });
-
-      if (error) throw error;
+      await fetchApi('/resident/learning/video', {
+        method: 'POST',
+        body: JSON.stringify({ moduleId })
+      });
       toast.success("Video completed! Quiz unlocked.");
       
       await fetchData();
@@ -89,19 +70,10 @@ export default function LearningModules() {
 
   const handleQuizPass = async (moduleId, score) => {
     try {
-      const { error } = await supabase
-        .from('user_learning_progress')
-        .upsert({
-          user_id: userProfile.id,
-          module_id: moduleId,
-          is_video_watched: true,
-          quiz_score: score,
-          is_completed: true,
-          completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id, module_id' });
-
-      if (error) throw error;
+      await fetchApi('/resident/learning/quiz', {
+        method: 'POST',
+        body: JSON.stringify({ moduleId, score })
+      });
 
       toast.success(`Module Completed! Score: ${score}%`);
       setActiveModuleForQuiz(null);
@@ -116,12 +88,7 @@ export default function LearningModules() {
   };
 
   const checkForCertificate = async () => {
-     if (modules.length > 0 && userProgress.filter(p => p.is_completed).length === modules.length && !certificate) {
-         try {
-            const { data, error } = await supabase.from('certifications').insert({ user_id: userProfile.id }).select().single();
-            if(!error) setCertificate(data);
-         } catch(e) {}
-     }
+     // Handled securely on backend during quiz pass now.
   };
 
   if (loading) {

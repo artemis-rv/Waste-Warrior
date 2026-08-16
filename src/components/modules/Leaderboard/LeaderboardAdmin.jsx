@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { fetchApi } from '@/lib/api';
 import {
   Trophy,
   Users,
@@ -44,26 +45,16 @@ export default function LeaderboardAdmin() {
 
   const fetchAllUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('credits', { ascending: false });
-
-      if (error) throw error;
-
-      const enrichedUsers = await Promise.all(
-        data.map(async (user) => {
-          const { count: reportsCount } = await supabase
-            .from('reports')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id);
-
-          return {
-            ...user,
-            reportsCount: reportsCount || 0
-          };
-        })
-      );
+      const usersData = await fetchApi('/api/admin/users');
+      const reportsData = await fetchApi('/api/admin/reports');
+      
+      const enrichedUsers = (usersData || []).map((user) => {
+        const userReports = (reportsData || []).filter(r => r.user_id === user.id);
+        return {
+          ...user,
+          reportsCount: userReports.length
+        };
+      }).sort((a, b) => (b.credits || 0) - (a.credits || 0));
 
       setUsers(enrichedUsers);
     } catch (error) {
@@ -82,18 +73,14 @@ export default function LeaderboardAdmin() {
     if (!selectedUser || pointsAmount <= 0) return;
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ credits: selectedUser.credits + pointsAmount })
-        .eq('id', selectedUser.id);
-
-      if (error) throw error;
-
-      await supabase.from('credit_audit_log').insert({
-        user_id: selectedUser.id,
-        action_type: 'add',
-        amount: pointsAmount,
-        reason: pointsReason || 'Admin addition'
+      await fetchApi('/api/admin/credits', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          amount: pointsAmount,
+          reason: pointsReason || 'Admin addition',
+          type: 'add'
+        })
       });
 
       toast({
@@ -119,20 +106,14 @@ export default function LeaderboardAdmin() {
     if (!selectedUser || pointsAmount <= 0) return;
 
     try {
-      const newCredits = Math.max(0, selectedUser.credits - pointsAmount);
-      
-      const { error } = await supabase
-        .from('users')
-        .update({ credits: newCredits })
-        .eq('id', selectedUser.id);
-
-      if (error) throw error;
-
-      await supabase.from('credit_audit_log').insert({
-        user_id: selectedUser.id,
-        action_type: 'deduct',
-        amount: -pointsAmount,
-        reason: pointsReason || 'Admin deduction'
+      await fetchApi('/api/admin/credits', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          amount: -pointsAmount,
+          reason: pointsReason || 'Admin deduction',
+          type: 'deduct'
+        })
       });
 
       toast({

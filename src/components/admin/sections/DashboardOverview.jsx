@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { Users, FileText, MapPin, Award, Briefcase, Package, TrendingUp, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -23,28 +23,23 @@ export default function DashboardOverview() {
   }, []);
 
   const fetchStats = async () => {
-    const [usersRes, reportsRes, workersRes, pointsRes, creditsRes, championsRes, kitsRes] = await Promise.all([
-      supabase.from('users').select('id', { count: 'exact' }),
-      supabase.from('reports').select('status', { count: 'exact' }),
-      supabase.from('users').select('is_active').eq('role', 'worker'),
-      supabase.from('collection_points').select('id', { count: 'exact' }),
-      supabase.from('users').select('credits'),
-      supabase.from('users').select('id').eq('is_green_champion', true),
-      supabase.from('kits').select('is_delivered')
-    ]);
-
-    setStats({
-      totalUsers: usersRes.count || 0,
-      totalReports: reportsRes.count || 0,
-      pendingReports: reportsRes.data?.filter(r => r.status === 'pending').length || 0,
-      completedReports: reportsRes.data?.filter(r => r.status === 'completed').length || 0,
-      totalWorkers: workersRes.data?.length || 0,
-      activeWorkers: workersRes.data?.filter(w => w.is_active).length || 0,
-      collectionPoints: pointsRes.count || 0,
-      totalCredits: creditsRes.data?.reduce((sum, u) => sum + (u.credits || 0), 0) || 0,
-      greenChampions: championsRes.data?.length || 0,
-      pendingKits: kitsRes.data?.filter(k => !k.is_delivered).length || 0
-    });
+    try {
+      const data = await fetchApi('/api/admin/dashboard');
+      setStats({
+        totalUsers: data.totalUsers,
+        totalReports: data.totalReports,
+        pendingReports: data.pendingReports,
+        completedReports: data.completedReports,
+        totalWorkers: data.totalWorkers,
+        activeWorkers: data.activeWorkers,
+        collectionPoints: data.collectionPoints,
+        totalCredits: data.totalCredits,
+        greenChampions: data.greenChampions,
+        pendingKits: data.pendingKits
+      });
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
   };
 
   const statCards = [

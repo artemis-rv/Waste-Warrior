@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Briefcase, UserPlus } from 'lucide-react';
 
@@ -22,22 +22,21 @@ export default function WorkersManagement() {
   }, []);
 
   const fetchWorkers = async () => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*, assigned_reports:reports(count)')
-      .eq('role', 'worker');
-    
-    if (!error && data) setWorkers(data);
+    try {
+      const data = await fetchApi('/api/admin/workers');
+      setWorkers(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const fetchPendingReports = async () => {
-    const { data } = await supabase
-      .from('reports')
-      .select('*, users(full_name)')
-      .in('status', ['pending', 'assigned'])
-      .order('created_at', { ascending: false });
-    
-    if (data) setReports(data);
+    try {
+      const data = await fetchApi('/api/admin/reports/pending');
+      setReports(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const assignPickup = async () => {
@@ -46,22 +45,22 @@ export default function WorkersManagement() {
       return;
     }
 
-    const { error } = await supabase
-      .from('reports')
-      .update({ 
-        assigned_to: selectedWorker,
-        status: 'assigned'
-      })
-      .eq('id', selectedReport);
+    try {
+      await fetchApi('/api/admin/pickups/assign', {
+        method: 'POST',
+        body: JSON.stringify({
+          reportId: selectedReport,
+          workerId: selectedWorker
+        })
+      });
 
-    if (!error) {
       toast.success('Pickup assigned successfully');
       fetchWorkers();
       fetchPendingReports();
       setAssignDialogOpen(false);
       setSelectedReport('');
       setSelectedWorker('');
-    } else {
+    } catch (error) {
       toast.error('Failed to assign pickup');
     }
   };

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Coins, Plus, Minus } from 'lucide-react';
 
@@ -29,20 +29,21 @@ export default function CreditsManagement() {
   }, []);
 
   const fetchUsers = async () => {
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .order('full_name');
-    if (data) setUsers(data);
+    try {
+      const data = await fetchApi('/api/admin/users');
+      setUsers(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const fetchAuditLog = async () => {
-    const { data } = await supabase
-      .from('credit_audit_log')
-      .select('*, users(full_name, email)')
-      .order('created_at', { ascending: false })
-      .limit(50);
-    if (data) setAuditLog(data);
+    try {
+      const data = await fetchApi('/api/admin/credits/logs');
+      setAuditLog(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -57,34 +58,15 @@ export default function CreditsManagement() {
     const finalAmount = formData.type === 'subtract' ? -amount : amount;
     
     try {
-      // Get current user credits
-      const { data: userData } = await supabase
-        .from('users')
-        .select('credits')
-        .eq('id', formData.userId)
-        .single();
-
-      const newCredits = (userData?.credits || 0) + finalAmount;
-
-      // Update user credits
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ credits: newCredits })
-        .eq('id', formData.userId);
-
-      if (updateError) throw updateError;
-
-      // Log the transaction
-      const { error: logError } = await supabase
-        .from('credit_audit_log')
-        .insert([{
-          user_id: formData.userId,
+      await fetchApi('/api/admin/credits', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: formData.userId,
           amount: finalAmount,
           reason: formData.reason,
-          action_type: formData.type
-        }]);
-
-      if (logError) throw logError;
+          type: formData.type
+        })
+      });
 
       toast.success(`Credits ${formData.type === 'add' ? 'added' : 'subtracted'} successfully`);
       fetchUsers();

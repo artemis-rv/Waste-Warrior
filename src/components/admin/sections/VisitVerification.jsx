@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { CheckSquare, X, Check, Eye } from 'lucide-react';
 
@@ -20,34 +20,33 @@ export default function VisitVerification() {
   }, []);
 
   const fetchCompletedReports = async () => {
-    const { data } = await supabase
-      .from('reports')
-      .select('*, users!reports_user_id_fkey(full_name), worker:users!reports_assigned_to_fkey(full_name)')
-      .in('status', ['completed', 'in_progress'])
-      .not('proof_photo_url', 'is', null)
-      .order('updated_at', { ascending: false });
-    
-    if (data) setReports(data);
+    try {
+      const data = await fetchApi('/api/admin/reports');
+      const filtered = (data || []).filter(r => 
+        (r.status === 'completed' || r.status === 'in_progress') && 
+        r.proof_photo_url != null
+      );
+      setReports(filtered);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const verifyVisit = async (reportId, isApproved) => {
-    const updates = {
-      is_verified: isApproved,
-      verification_notes: adminNotes || null,
-      verified_at: new Date().toISOString()
-    };
+    try {
+      await fetchApi(`/api/admin/reports/${reportId}/verify`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          is_verified: isApproved,
+          verification_notes: adminNotes || null
+        })
+      });
 
-    const { error } = await supabase
-      .from('reports')
-      .update(updates)
-      .eq('id', reportId);
-
-    if (!error) {
       toast.success(isApproved ? 'Visit verified successfully' : 'Visit rejected');
       fetchCompletedReports();
       setViewDialog(false);
       setAdminNotes('');
-    } else {
+    } catch (error) {
       toast.error('Failed to verify visit');
     }
   };

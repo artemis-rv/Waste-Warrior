@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Camera, MapPin, Upload, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/hooks/use-toast';
+import { fetchApi } from '@/lib/api';
 
 export default function ReportForm({ onReportSubmitted }) {
   const { user } = useAuth();
@@ -166,11 +167,10 @@ export default function ReportForm({ onReportSubmitted }) {
       // Upload images first
       const photoUrls = await uploadImages();
 
-      // Submit report
-      const { data, error } = await supabase
-        .from('reports')
-        .insert({
-          user_id: user.id,
+      // Submit report using new backend API
+      const { report } = await fetchApi('/resident/reports', {
+        method: 'POST',
+        body: JSON.stringify({
           title: formData.title.trim(),
           description: formData.description.trim(),
           address_text: formData.address_text.trim() || null,
@@ -178,26 +178,7 @@ export default function ReportForm({ onReportSubmitted }) {
           location_lng: formData.location_lng,
           photo_urls: photoUrls
         })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Award credits for submitting report
-      await supabase
-        .from('credits_log')
-        .insert({
-          user_id: user.id,
-          amount: 10,
-          reason: 'Waste report submitted',
-          reference_id: data.id
-        });
-
-      // Update user credits
-      await supabase
-        .from('users')
-        .update({ credits: supabase.sql`credits + 10` })
-        .eq('id', user.id);
+      });
 
       toast({
         title: t('reportForm.submittedTitle') || 'Report submitted!',

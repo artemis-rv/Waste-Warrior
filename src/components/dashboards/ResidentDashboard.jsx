@@ -28,6 +28,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { fetchApi } from '@/lib/api';
 import ReportForm from '@/components/forms/ReportForm';
 import CreditsSystem from '@/components/features/CreditsSystem';
 import { LeaderboardDashboard } from '@/components/modules/Leaderboard';
@@ -63,40 +64,15 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
 
   const fetchUserData = async () => {
     try {
-      
-      // Fetch user's reports
-      const { data: reportsData, error: reportsError } = await supabase
-        .from('reports')
-        .select('*')
-        .eq('user_id', userProfile?.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (reportsError) throw reportsError;
-
-      // Fetch notifications
-      const { data: notificationsData, error: notificationsError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userProfile?.id)
-        .eq('is_read', false)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (notificationsError) throw notificationsError;
-
-      // Calculate stats
-      const totalReports = reportsData?.length || 0;
-      const resolvedReports = reportsData?.filter(r => r.status === 'resolved').length || 0;
-      const pendingReports = reportsData?.filter(r => r.status === 'pending').length || 0;
-
-      setReports(reportsData || []);
-      setNotifications(notificationsData || []);
+      setLoading(true);
+      const data = await fetchApi('/resident/dashboard', { method: 'GET' });
+      setReports(data.reports || []);
+      setNotifications(data.notifications || []);
       setStats({
-        totalReports,
-        resolvedReports,
-        pendingReports,
-        totalCredits: userProfile?.credits || 0,
+        totalReports: data.stats.totalReports,
+        resolvedReports: data.stats.resolvedReports,
+        pendingReports: data.stats.pendingReports,
+        totalCredits: data.stats.totalCredits,
       });
     } catch (error) {
       console.error('Error fetching data:', error);

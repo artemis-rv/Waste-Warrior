@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Package, Plus, CheckCircle } from 'lucide-react';
 
@@ -29,58 +29,54 @@ export default function KitDistribution() {
   }, []);
 
   const fetchKits = async () => {
-    const { data } = await supabase
-      .from('kits')
-      .select('*, users(full_name, email)')
-      .order('created_at', { ascending: false });
-    if (data) setKits(data);
+    try {
+      const data = await fetchApi('/api/admin/kits');
+      setKits(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const fetchUsers = async () => {
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('role', 'resident')
-      .order('full_name');
-    if (data) setUsers(data);
+    try {
+      const data = await fetchApi('/api/admin/users');
+      setUsers(data?.filter(u => u.role === 'resident') || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const { error } = await supabase
-      .from('kits')
-      .insert([{
-        name: formData.name,
-        description: formData.description,
-        items: formData.items,
-        assigned_to: formData.userId === 'unassigned' ? null : formData.userId,
-        is_delivered: false
-      }]);
+    try {
+      await fetchApi('/api/admin/kits', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          items: formData.items,
+          assigned_to: formData.userId === 'unassigned' ? null : formData.userId
+        })
+      });
 
-    if (!error) {
       toast.success('Kit created successfully');
       fetchKits();
       setOpen(false);
       setFormData({ name: '', description: '', items: '', userId: 'unassigned' });
-    } else {
+    } catch (error) {
       toast.error('Failed to create kit');
     }
   };
 
   const markAsDelivered = async (kitId) => {
-    const { error } = await supabase
-      .from('kits')
-      .update({ 
-        is_delivered: true,
-        delivered_at: new Date().toISOString()
-      })
-      .eq('id', kitId);
-
-    if (!error) {
+    try {
+      await fetchApi(`/api/admin/kits/${kitId}/deliver`, {
+        method: 'PUT'
+      });
       toast.success('Kit marked as delivered');
       fetchKits();
-    } else {
+    } catch (error) {
       toast.error('Failed to update kit status');
     }
   };

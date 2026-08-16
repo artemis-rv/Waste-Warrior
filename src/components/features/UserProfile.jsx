@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { fetchApi } from '@/lib/api';
 
 export default function UserProfile() {
   const { userProfile, updateProfile } = useAuth();
@@ -42,12 +43,10 @@ export default function UserProfile() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('users')
-        .update(formData)
-        .eq('id', userProfile.id);
-
-      if (error) throw error;
+      const { user } = await fetchApi('/resident/profile', {
+        method: 'PUT',
+        body: JSON.stringify(formData)
+      });
 
       await updateProfile();
       setIsEditing(false);

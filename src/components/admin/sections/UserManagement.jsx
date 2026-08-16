@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Users, Ban, CheckCircle, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,39 +19,37 @@ export default function UserManagement() {
   }, []);
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error && data) setUsers(data);
+    try {
+      const data = await fetchApi('/api/admin/users');
+      setUsers(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const toggleBan = async (userId, currentBanStatus) => {
-    const { error } = await supabase
-      .from('users')
-      .update({ is_banned: !currentBanStatus })
-      .eq('id', userId);
-    
-    if (!error) {
+    try {
+      await fetchApi(`/api/admin/users/${userId}/ban`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_banned: !currentBanStatus })
+      });
       toast.success(currentBanStatus ? 'User unbanned' : 'User banned');
       fetchUsers();
-    } else {
+    } catch (error) {
       toast.error('Failed to update user status');
     }
   };
 
   const updateRole = async (userId, role) => {
-    const { error } = await supabase
-      .from('users')
-      .update({ role })
-      .eq('id', userId);
-    
-    if (!error) {
+    try {
+      await fetchApi(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        body: JSON.stringify({ role })
+      });
       toast.success('User role updated');
       fetchUsers();
       setEditingUser(null);
-    } else {
+    } catch (error) {
       toast.error('Failed to update role');
     }
   };

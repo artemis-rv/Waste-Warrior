@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const healthRoutes = require('./routes/health.routes');
 const authRoutes = require('./routes/auth.routes');
+const residentRoutes = require('./routes/resident.routes');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -24,9 +25,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+const workerRoutes = require('./routes/worker.routes');
+const adminRoutes = require('./routes/admin.routes');
+
 // Routes
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/resident', residentRoutes);
+app.use('/api/worker', workerRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 Handler
 app.use(notFoundHandler);

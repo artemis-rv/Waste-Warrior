@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { MapPin, Plus, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -29,12 +29,12 @@ export default function CollectionPointManagement() {
   }, []);
 
   const fetchPoints = async () => {
-    const { data, error } = await supabase
-      .from('collection_points')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error && data) setPoints(data);
+    try {
+      const data = await fetchApi('/api/admin/collection-points');
+      setPoints(data || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -51,19 +51,16 @@ export default function CollectionPointManagement() {
 
     try {
       if (editingPoint) {
-        const { error } = await supabase
-          .from('collection_points')
-          .update(dataToSubmit)
-          .eq('id', editingPoint.id);
-        
-        if (error) throw error;
+        await fetchApi(`/api/admin/collection-points/${editingPoint.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ ...dataToSubmit, id: editingPoint.id })
+        });
         toast.success('Collection point updated successfully');
       } else {
-        const { error } = await supabase
-          .from('collection_points')
-          .insert([dataToSubmit]);
-        
-        if (error) throw error;
+        await fetchApi('/api/admin/collection-points', {
+          method: 'POST',
+          body: JSON.stringify(dataToSubmit)
+        });
         toast.success('Collection point created successfully');
       }
       
@@ -79,15 +76,13 @@ export default function CollectionPointManagement() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this collection point?')) return;
     
-    const { error } = await supabase
-      .from('collection_points')
-      .delete()
-      .eq('id', id);
-    
-    if (!error) {
+    try {
+      await fetchApi(`/api/admin/collection-points/${id}`, {
+        method: 'DELETE'
+      });
       toast.success('Collection point deleted');
       fetchPoints();
-    } else {
+    } catch (error) {
       toast.error('Failed to delete collection point');
     }
   };

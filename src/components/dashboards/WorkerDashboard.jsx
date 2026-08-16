@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,30 +40,11 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
     try {
       setLoading(true);
       
-      const [reportsRes, profileRes, notificationsRes] = await Promise.all([
-        supabase
-          .from('reports')
-          .select('*, users:user_id(full_name, email)') // <-- THIS LINE IS FIXED
-          .eq('assigned_worker_id', user.id)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('workers')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle(),
-        supabase
-          .from('worker_notifications')
-          .select('*')
-          .eq('worker_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20)
-      ]);
-
-      if (reportsRes.error) throw reportsRes.error;
+      const data = await fetchApi('/api/worker/dashboard');
       
-      setAssignedReports(reportsRes.data || []);
-      setWorkerProfile(profileRes.data);
-      setNotifications(notificationsRes.data || []);
+      setAssignedReports(data.reports || []);
+      setWorkerProfile(data.profile);
+      setNotifications(data.notifications || []);
     } catch (error) {
       console.error('Error fetching worker data:', error);
       toast.error('Failed to load worker data');
@@ -106,12 +88,10 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from('reports')
-        .update(updateData)
-        .eq('id', reportId);
-
-      if (error) throw error;
+      await fetchApi(`/api/worker/pickups/${reportId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      });
 
       toast.success(t('worker.statusUpdated'));
       fetchWorkerData();
@@ -159,18 +139,15 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
         .from('waste-reports')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from('reports')
-        .update({ 
+      await fetchApi(`/api/worker/pickups/${reportId}/evidence`, {
+        method: 'PUT',
+        body: JSON.stringify({ 
           evidence_photo_url: publicUrl,
           evidence_timestamp: new Date().toISOString(),
           evidence_lat: geoData.lat,
-          evidence_lng: geoData.lng,
-          status: 'in_progress'
+          evidence_lng: geoData.lng
         })
-        .eq('id', reportId);
-
-      if (updateError) throw updateError;
+      });
 
       toast.success(
         geoData.lat ? t('worker.evidenceWithGeo') : t('worker.evidenceUploaded')
@@ -185,12 +162,14 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   };
 
   const markNotificationRead = async (notificationId) => {
-    await supabase
-      .from('worker_notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
-    
-    fetchWorkerData();
+    try {
+      await fetchApi(`/api/worker/notifications/${notificationId}/read`, {
+        method: 'PUT'
+      });
+      fetchWorkerData();
+    } catch (error) {
+      console.error('Error marking notification read:', error);
+    }
   };
 
 

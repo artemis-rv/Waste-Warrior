@@ -1,0 +1,87 @@
+const residentService = require('../services/resident.service');
+
+const updateProfile = async (req, res) => {
+  try {
+    const user = await residentService.updateProfile(req.user.id, req.body);
+    res.json({ message: 'Profile updated', user });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const getDashboard = async (req, res) => {
+  try {
+    const data = await residentService.getDashboard(req.user.id);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const submitReport = async (req, res) => {
+  try {
+    const data = await residentService.submitReport(req.user.id, req.body);
+    res.status(201).json({ message: 'Report submitted', ...data });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const getCredits = async (req, res) => {
+  try {
+    const data = await residentService.getCredits(req.user.id);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const redeemCredits = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const redeem = await residentService.redeemCredits(req.user.id, amount);
+    res.status(201).json({ message: 'Code generated', code: redeem.code, redeem });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const getLearning = async (req, res) => {
+  try {
+    const data = await residentService.getLearning(req.user.id);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const markVideoWatched = async (req, res) => {
+  try {
+    const { moduleId } = req.body;
+    const progress = await residentService.markVideoWatched(req.user.id, moduleId);
+    res.json({ message: 'Video marked as watched', progress });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const markQuizPassed = async (req, res) => {
+  try {
+    const { moduleId, score } = req.body;
+    const data = await residentService.markQuizPassed(req.user.id, moduleId, score);
+    res.json({ message: 'Quiz passed', ...data });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  updateProfile,
+  getDashboard,
+  submitReport,
+  getCredits,
+  redeemCredits,
+  getLearning,
+  markVideoWatched,
+  markQuizPassed
+};
