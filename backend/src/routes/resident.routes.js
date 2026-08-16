@@ -12,6 +12,10 @@ router.put('/profile', residentController.updateProfile);
 
 // Dashboard
 router.get('/dashboard', residentController.getDashboard);
+router.get('/notifications', residentController.getNotifications);
+
+// Leaderboard
+router.get('/leaderboard', residentController.getLeaderboard);
 
 // Reports
 router.post('/reports', residentController.submitReport);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,28 +50,12 @@ export default function LeaderboardDashboard() {
 
   const fetchLeaderboardData = async () => {
     try {
-      // Fetch residents
-      const { data: residentsData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'resident')
-        .order('credits', { ascending: false })
-        .limit(20);
-
-      // Fetch workers
-      const { data: workersData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'worker')
-        .order('credits', { ascending: false })
-        .limit(20);
-
-      // Get additional stats for each user
-      const enrichResidents = await enrichUserData(residentsData || []);
-      const enrichWorkers = await enrichUserData(workersData || []);
-
-      setResidents(enrichResidents);
-      setWorkers(enrichWorkers);
+      const data = await fetchApi('/resident/leaderboard');
+      setResidents(data.residents || []);
+      setWorkers(data.workers || []);
+      if (data.stats) {
+        setStats(data.stats);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
@@ -79,59 +64,12 @@ export default function LeaderboardDashboard() {
   };
 
   const enrichUserData = async (users) => {
-    return Promise.all(
-      users.map(async (user) => {
-        const { count: reportsCount } = await supabase
-          .from('reports')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-
-        const { count: monthlyReports } = await supabase
-          .from('reports')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .gte('created_at', startOfMonth.toISOString());
-
-        return {
-          ...user,
-          reportsCount: reportsCount || 0,
-          monthlyReports: monthlyReports || 0,
-        };
-      })
-    );
+    return users; // Handled by backend now
   };
 
   const fetchStats = async () => {
-    try {
-      const { count: totalReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: totalUsers } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const { count: monthlyReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth.toISOString());
-
-      setStats({
-        totalReports: totalReports || 0,
-        totalUsers: totalUsers || 0,
-        monthlyReports: monthlyReports || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
+    // Stats are now fetched alongside leaderboard data to reduce requests
+    // Kept for structure compatibility, but functionality moved to fetchLeaderboardData
   };
 
   const renderLeaderboardList = (data) => (

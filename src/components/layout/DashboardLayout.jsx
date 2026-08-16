@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { Recycle, Bell, LogOut, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import LanguageSelector from '@/components/ui/language-selector';
 import NotificationDropdown from '@/components/layout/NotificationDropdown';
 import { useTranslation } from 'react-i18next';
@@ -39,13 +40,8 @@ export default function DashboardLayout({ children, activeSection, onSectionChan
 
   const fetchNotificationCount = async () => {
     try {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userProfile.id)
-        .eq('is_read', false);
-
-      setUnreadNotifications(count || 0);
+      const data = await fetchApi('/resident/notifications');
+      setUnreadNotifications(data.count || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }

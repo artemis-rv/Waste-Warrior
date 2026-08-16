@@ -62,6 +62,91 @@ class ResidentService {
     };
   }
 
+  async getNotifications(userId) {
+    const unreadCount = await prisma.notification.count({
+      where: { userId, isRead: false },
+    });
+
+    const notifications = await prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    return {
+      count: unreadCount,
+      data: notifications,
+    };
+  }
+
+  async getLeaderboard(userId) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const totalReports = await prisma.report.count();
+    const totalUsers = await prisma.user.count();
+    const monthlyReports = await prisma.report.count({
+      where: { createdAt: { gte: startOfMonth } }
+    });
+
+    const enrichUsers = async (users) => {
+      return Promise.all(
+        users.map(async (user) => {
+          const reportsCount = await prisma.report.count({ where: { userId: user.id } });
+          const userMonthlyReports = await prisma.report.count({
+            where: { userId: user.id, createdAt: { gte: startOfMonth } }
+          });
+          return {
+            id: user.id,
+            full_name: user.fullName,
+            avatar_url: user.avatarUrl,
+            credits: user.credits,
+            reportsCount,
+            monthlyReports: userMonthlyReports,
+          };
+        })
+      );
+    };
+
+    const topResidentsRaw = await prisma.user.findMany({
+      where: { role: 'resident' },
+      orderBy: { credits: 'desc' },
+      take: 20,
+    });
+    const residents = await enrichUsers(topResidentsRaw);
+
+    const topWorkersRaw = await prisma.user.findMany({
+      where: { role: 'worker' },
+      orderBy: { credits: 'desc' },
+      take: 20,
+    });
+    const workers = await enrichUsers(topWorkersRaw);
+
+    const topChampionsRaw = await prisma.user.findMany({
+      orderBy: { credits: 'desc' },
+      take: 10,
+    });
+    const champions = await enrichUsers(topChampionsRaw);
+
+    const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { credits: true } });
+    let currentUserRank = null;
+    if (currentUser) {
+      const usersWithMoreCredits = await prisma.user.count({
+        where: { credits: { gt: currentUser.credits } }
+      });
+      currentUserRank = usersWithMoreCredits + 1;
+    }
+
+    return {
+      stats: { totalReports, totalUsers, monthlyReports },
+      residents,
+      workers,
+      champions,
+      currentUserRank
+    };
+  }
+
   async submitReport(userId, data) {
     const { title, description, address_text, location_lat, location_lng, photo_urls } = data;
 

@@ -18,6 +18,24 @@ const getDashboard = async (req, res) => {
   }
 };
 
+const getNotifications = async (req, res) => {
+  try {
+    const notifications = await residentService.getNotifications(req.user.id);
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getLeaderboard = async (req, res) => {
+  try {
+    const data = await residentService.getLeaderboard(req.user.id);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const submitReport = async (req, res) => {
   try {
     const data = await residentService.submitReport(req.user.id, req.body);
@@ -93,6 +111,8 @@ const getQuizQuestions = async (req, res, next) => {
 module.exports = {
   updateProfile,
   getDashboard,
+  getNotifications,
+  getLeaderboard,
   submitReport,
   getCredits,
   redeemCredits,

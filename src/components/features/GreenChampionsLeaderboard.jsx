@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,64 +27,12 @@ export default function GreenChampionsLeaderboard() {
 
   const fetchLeaderboardData = async () => {
     try {
-      // Get top users by credits (showing monthly leaders)
-      const { data: topUsers, error } = await supabase
-        .from('users')
-        .select('id, full_name, avatar_url, credits')
-        .order('credits', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      // Get additional stats for each user
-      const leaderboardWithStats = await Promise.all(
-        topUsers.map(async (user) => {
-          // Get total reports count
-          const { count: reportsCount } = await supabase
-            .from('reports')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id);
-
-          // Get monthly reports count
-          const startOfMonth = new Date();
-          startOfMonth.setDate(1);
-          startOfMonth.setHours(0, 0, 0, 0);
-
-          const { count: monthlyReports } = await supabase
-            .from('reports')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .gte('created_at', startOfMonth.toISOString());
-
-          return {
-            ...user,
-            reportsCount: reportsCount || 0,
-            monthlyReports: monthlyReports || 0
-          };
-        })
-      );
-
-      setLeaderboard(leaderboardWithStats);
-
-      // Find current user's rank
-      if (user) {
-        const userIndex = leaderboardWithStats.findIndex(u => u.id === user.id);
-        if (userIndex !== -1) {
-          setUserRank(userIndex + 1);
-        } else {
-          // User not in top 10, get their actual rank
-          const { data: allUsers, error: rankError } = await supabase
-            .from('users')
-            .select('id, credits')
-            .order('credits', { ascending: false });
-
-          if (!rankError && allUsers) {
-            const rank = allUsers.findIndex(u => u.id === user.id) + 1;
-            setUserRank(rank);
-          }
-        }
+      const data = await fetchApi('/resident/leaderboard');
+      setLeaderboard(data.champions || []);
+      setUserRank(data.currentUserRank);
+      if (data.stats) {
+        setStats(data.stats);
       }
-
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
@@ -92,36 +41,7 @@ export default function GreenChampionsLeaderboard() {
   };
 
   const fetchStats = async () => {
-    try {
-      // Total reports
-      const { count: totalReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true });
-
-      // Total users
-      const { count: totalUsers } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-
-      // Monthly reports
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const { count: monthlyReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth.toISOString());
-
-      setStats({
-        totalReports: totalReports || 0,
-        totalUsers: totalUsers || 0,
-        monthlyReports: monthlyReports || 0
-      });
-
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
+    // Stats are now fetched alongside leaderboard data
   };
 
   const getRankIcon = (rank) => {
