@@ -1,4 +1,5 @@
 const workerService = require('../services/worker.service');
+const storageService = require('../services/storage.service');
 
 exports.getDashboard = async (req, res, next) => {
   try {
@@ -19,7 +20,7 @@ exports.updatePickupStatus = async (req, res, next) => {
 
     if (req.file) {
       const evidenceData = {
-        evidence_photo_url: `/uploads/evidence/${req.file.filename}`,
+        evidence_photo_url: storageService.getFileUrl('evidence', req.file.filename),
         evidence_timestamp: new Date().toISOString(),
         evidence_lat: req.body.evidenceLat ? parseFloat(req.body.evidenceLat) : null,
         evidence_lng: req.body.evidenceLng ? parseFloat(req.body.evidenceLng) : null

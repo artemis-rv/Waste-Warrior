@@ -1,4 +1,5 @@
 const residentService = require('../services/resident.service');
+const storageService = require('../services/storage.service');
 
 const updateProfile = async (req, res) => {
   try {
@@ -40,7 +41,7 @@ const submitReport = async (req, res) => {
   try {
     let photo_urls = [];
     if (req.files && req.files.length > 0) {
-      photo_urls = req.files.map(file => `/uploads/reports/${file.filename}`);
+      photo_urls = req.files.map(file => storageService.getFileUrl('reports', file.filename));
     }
 
     const reportData = {

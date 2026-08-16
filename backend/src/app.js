@@ -46,17 +46,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Static files (only reports are public)
+app.use('/uploads/reports', express.static(path.join(__dirname, '../uploads/reports')));
 
 const residentRoutes = require('./routes/resident.routes');
 const workerRoutes = require('./routes/worker.routes');
 const adminRoutes = require('./routes/admin.routes');
+const storageRoutes = require('./routes/storage.routes');
 
 // Routes
 app.use('/api', globalLimiter);
 app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/storage', storageRoutes);
 app.use('/api/resident', residentRoutes);
 app.use('/api/worker', workerRoutes);
 app.use('/api/admin', adminRoutes);
