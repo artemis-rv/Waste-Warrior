@@ -20,7 +20,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const data = await fetchApi('/api/admin/users');
+      const data = await fetchApi('/admin/users');
       setUsers(data || []);
     } catch (error) {
       console.error(error);
@@ -29,7 +29,7 @@ export default function UserManagement() {
 
   const toggleBan = async (userId, currentBanStatus) => {
     try {
-      await fetchApi(`/api/admin/users/${userId}/ban`, {
+      await fetchApi(`\/admin/users/${userId}/ban`, {
         method: 'PUT',
         body: JSON.stringify({ is_banned: !currentBanStatus })
       });
@@ -42,7 +42,7 @@ export default function UserManagement() {
 
   const updateRole = async (userId, role) => {
     try {
-      await fetchApi(`/api/admin/users/${userId}/role`, {
+      await fetchApi(`\/admin/users/${userId}/role`, {
         method: 'PUT',
         body: JSON.stringify({ role })
       });

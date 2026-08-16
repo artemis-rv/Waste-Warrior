@@ -25,7 +25,7 @@ export default function ExportReports() {
 
   const fetchStats = async () => {
     try {
-      const data = await fetchApi('/api/admin/dashboard');
+      const data = await fetchApi('/admin/dashboard');
       setStats({
         totalReports: data.totalReports,
         completedReports: data.completedReports,
@@ -55,7 +55,7 @@ export default function ExportReports() {
   const exportMonthlyStats = async () => {
     try {
       const qs = `?type=monthly&startDate=${startDate || '2020-01-01'}&endDate=${endDate || new Date().toISOString()}`;
-      const reports = await fetchApi('/api/admin/reports/export' + qs);
+      const reports = await fetchApi('/admin/reports/export' + qs);
 
       const headers = ['title', 'reporter_name', 'reporter_email', 'status', 'created_at', 'completed_at'];
       const data = reports?.map(r => ({
@@ -78,7 +78,7 @@ export default function ExportReports() {
   const exportCreditsDistributed = async () => {
     try {
       const qs = `?type=credits&startDate=${startDate || '2020-01-01'}&endDate=${endDate || new Date().toISOString()}`;
-      const data = await fetchApi('/api/admin/reports/export' + qs);
+      const data = await fetchApi('/admin/reports/export' + qs);
 
       const headers = ['user_name', 'user_email', 'amount', 'action_type', 'reason', 'created_at'];
       const csvData = data?.map(log => ({
@@ -101,7 +101,7 @@ export default function ExportReports() {
   const exportResolvedReports = async () => {
     try {
       const qs = `?type=resolved&startDate=${startDate || '2020-01-01'}&endDate=${endDate || new Date().toISOString()}`;
-      const data = await fetchApi('/api/admin/reports/export' + qs);
+      const data = await fetchApi('/admin/reports/export' + qs);
 
       const headers = ['title', 'reporter', 'worker', 'created_at', 'completed_at', 'is_verified'];
       const csvData = data?.map(r => ({

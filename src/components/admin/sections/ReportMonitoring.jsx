@@ -30,7 +30,7 @@ export default function ReportMonitoring() {
 
   const fetchReports = async () => {
     try {
-      const data = await fetchApi('/api/admin/reports');
+      const data = await fetchApi('/admin/reports');
       setReports(data || []);
     } catch (error) {
       console.error(error);
@@ -39,7 +39,7 @@ export default function ReportMonitoring() {
 
   const fetchWorkers = async () => {
     try {
-      const data = await fetchApi('/api/admin/workers');
+      const data = await fetchApi('/admin/workers');
       setWorkers(data || []);
     } catch (error) {
       console.error(error);
@@ -53,7 +53,7 @@ export default function ReportMonitoring() {
     }
 
     try {
-      await fetchApi('/api/admin/pickups/assign', {
+      await fetchApi('/admin/pickups/assign', {
         method: 'POST',
         body: JSON.stringify({
           workerId: assignData.workerId,
@@ -78,7 +78,7 @@ export default function ReportMonitoring() {
     }
 
     try {
-      await fetchApi(`/api/admin/reports/${selectedReport.id}/escalate`, {
+      await fetchApi(`\/admin/reports/${selectedReport.id}/escalate`, {
         method: 'PUT',
         body: JSON.stringify({ penaltyAmount: parseInt(penaltyAmount) })
       });

@@ -63,27 +63,15 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
 
   const fetchUserData = async () => {
     try {
-      // Fetch user's reports & notifications from Express REST API
-      const [reportsRes, notificationsRes] = await Promise.all([
-        fetchApi('/reports'),
-        fetchApi('/notifications')
-      ]);
+      const data = await fetchApi('/resident/dashboard');
 
-      const reportsData = reportsRes?.reports || [];
-      const notificationsData = notificationsRes?.notifications || [];
-
-      // Calculate stats
-      const totalReports = reportsData?.length || 0;
-      const resolvedReports = reportsData?.filter(r => r.status === 'resolved').length || 0;
-      const pendingReports = reportsData?.filter(r => r.status === 'pending').length || 0;
-
-      setReports(reportsData);
-      setNotifications(notificationsData);
+      setReports(data.reports || []);
+      setNotifications(data.notifications || []);
       setStats({
-        totalReports,
-        resolvedReports,
-        pendingReports,
-        totalCredits: userProfile?.credits || 0,
+        totalReports: data.stats?.totalReports || 0,
+        resolvedReports: data.stats?.resolvedReports || 0,
+        pendingReports: data.stats?.pendingReports || 0,
+        totalCredits: data.stats?.totalCredits || userProfile?.credits || 0,
       });
     } catch (error) {
       console.error('Error fetching data from API:', error);

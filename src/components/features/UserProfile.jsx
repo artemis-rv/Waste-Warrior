@@ -44,14 +44,12 @@ export default function UserProfile() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('users')
-        .update(formData)
-        .eq('id', userProfile.id);
+      await updateProfile({
+        fullName: formData.full_name,
+        phone: formData.phone,
+        address: formData.address
+      });
 
-      if (error) throw error;
-
-      await updateProfile();
       setIsEditing(false);
       toast({
         title: 'Profile Updated',

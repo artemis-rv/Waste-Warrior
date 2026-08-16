@@ -45,8 +45,8 @@ export default function LeaderboardAdmin() {
 
   const fetchAllUsers = async () => {
     try {
-      const usersData = await fetchApi('/api/admin/users');
-      const reportsData = await fetchApi('/api/admin/reports');
+      const usersData = await fetchApi('/admin/users');
+      const reportsData = await fetchApi('/admin/reports');
       
       const enrichedUsers = (usersData || []).map((user) => {
         const userReports = (reportsData || []).filter(r => r.user_id === user.id);
@@ -73,7 +73,7 @@ export default function LeaderboardAdmin() {
     if (!selectedUser || pointsAmount <= 0) return;
 
     try {
-      await fetchApi('/api/admin/credits', {
+      await fetchApi('/admin/credits', {
         method: 'POST',
         body: JSON.stringify({
           userId: selectedUser.id,
@@ -106,7 +106,7 @@ export default function LeaderboardAdmin() {
     if (!selectedUser || pointsAmount <= 0) return;
 
     try {
-      await fetchApi('/api/admin/credits', {
+      await fetchApi('/admin/credits', {
         method: 'POST',
         body: JSON.stringify({
           userId: selectedUser.id,

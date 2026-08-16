@@ -21,7 +21,7 @@ export default function VisitVerification() {
 
   const fetchCompletedReports = async () => {
     try {
-      const data = await fetchApi('/api/admin/reports');
+      const data = await fetchApi('/admin/reports');
       const filtered = (data || []).filter(r => 
         (r.status === 'completed' || r.status === 'in_progress') && 
         r.proof_photo_url != null
@@ -34,7 +34,7 @@ export default function VisitVerification() {
 
   const verifyVisit = async (reportId, isApproved) => {
     try {
-      await fetchApi(`/api/admin/reports/${reportId}/verify`, {
+      await fetchApi(`\/admin/reports/${reportId}/verify`, {
         method: 'PUT',
         body: JSON.stringify({
           is_verified: isApproved,

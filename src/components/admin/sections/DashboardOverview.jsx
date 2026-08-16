@@ -24,7 +24,7 @@ export default function DashboardOverview() {
 
   const fetchStats = async () => {
     try {
-      const data = await fetchApi('/api/admin/dashboard');
+      const data = await fetchApi('/admin/dashboard');
       setStats({
         totalUsers: data.totalUsers,
         totalReports: data.totalReports,

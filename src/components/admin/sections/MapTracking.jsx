@@ -55,9 +55,9 @@ export default function MapTracking() {
   const fetchData = async () => {
     try {
       const [workersData, reportsData, pointsData] = await Promise.all([
-        fetchApi('/api/admin/workers'),
-        fetchApi('/api/admin/reports'),
-        fetchApi('/api/admin/collection-points')
+        fetchApi('/admin/workers'),
+        fetchApi('/admin/reports'),
+        fetchApi('/admin/collection-points')
       ]);
 
       setWorkers(workersData || []);

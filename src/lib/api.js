@@ -17,6 +17,10 @@ export const fetchApi = async (endpoint, options = {}) => {
     },
   };
 
+  if (options.body instanceof FormData) {
+    delete finalOptions.headers['Content-Type'];
+  }
+
   const response = await fetch(url, finalOptions);
   
   let data;

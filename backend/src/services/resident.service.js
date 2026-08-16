@@ -344,6 +344,27 @@ class ResidentService {
       where: { moduleId }
     });
   }
+
+  async createCertificate(userId) {
+    const allModulesCount = await prisma.learningModule.count();
+    const completedCount = await prisma.userLearningProgress.count({
+      where: { userId, isCompleted: true },
+    });
+
+    if (completedCount >= allModulesCount && allModulesCount > 0) {
+      const existingCert = await prisma.certification.findFirst({
+        where: { userId },
+      });
+      
+      if (!existingCert) {
+        return await prisma.certification.create({
+          data: { userId },
+        });
+      }
+      return existingCert;
+    }
+    throw new Error('Not all modules are completed yet');
+  }
 }
 
 module.exports = new ResidentService();

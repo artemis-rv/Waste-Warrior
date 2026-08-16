@@ -30,7 +30,7 @@ export default function KitDistribution() {
 
   const fetchKits = async () => {
     try {
-      const data = await fetchApi('/api/admin/kits');
+      const data = await fetchApi('/admin/kits');
       setKits(data || []);
     } catch (error) {
       console.error(error);
@@ -39,7 +39,7 @@ export default function KitDistribution() {
 
   const fetchUsers = async () => {
     try {
-      const data = await fetchApi('/api/admin/users');
+      const data = await fetchApi('/admin/users');
       setUsers(data?.filter(u => u.role === 'resident') || []);
     } catch (error) {
       console.error(error);
@@ -50,7 +50,7 @@ export default function KitDistribution() {
     e.preventDefault();
     
     try {
-      await fetchApi('/api/admin/kits', {
+      await fetchApi('/admin/kits', {
         method: 'POST',
         body: JSON.stringify({
           name: formData.name,
@@ -71,7 +71,7 @@ export default function KitDistribution() {
 
   const markAsDelivered = async (kitId) => {
     try {
-      await fetchApi(`/api/admin/kits/${kitId}/deliver`, {
+      await fetchApi(`\/admin/kits/${kitId}/deliver`, {
         method: 'PUT'
       });
       toast.success('Kit marked as delivered');

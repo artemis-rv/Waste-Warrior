@@ -39,15 +39,11 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   const fetchWorkerData = async () => {
     try {
       setLoading(true);
+      const data = await fetchApi('/worker/dashboard');
       
-      const [reportsRes, notificationsRes] = await Promise.all([
-        fetchApi('/reports'),
-        fetchApi('/notifications')
-      ]);
-      
-      setAssignedReports(reportsRes?.reports || []);
+      setAssignedReports(data.reports || []);
       setWorkerProfile(userProfile || { name: user?.fullName || 'Worker' });
-      setNotifications(notificationsRes?.notifications || []);
+      setNotifications(data.notifications || []);
     } catch (error) {
       console.error('Error fetching worker data from API:', error);
       setAssignedReports([]);
@@ -118,32 +114,16 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
         });
       }
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${reportId}-evidence-${Date.now()}.${fileExt}`;
-      const filePath = `evidence/${fileName}`;
+      const formData = new FormData();
+      formData.append('evidence', file);
+      formData.append('status', 'in_progress');
+      if (geoData.lat) formData.append('evidenceLat', geoData.lat);
+      if (geoData.lng) formData.append('evidenceLng', geoData.lng);
 
-      const { error: uploadError } = await supabase.storage
-        .from('waste-reports')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('waste-reports')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('reports')
-        .update({ 
-          evidence_photo_url: publicUrl,
-          evidence_timestamp: new Date().toISOString(),
-          evidence_lat: geoData.lat,
-          evidence_lng: geoData.lng,
-          status: 'in_progress'
-        })
-        .eq('id', reportId);
-
-      if (updateError) throw updateError;
+      const res = await fetchApi(`/worker/pickups/${reportId}/status`, {
+        method: 'PATCH',
+        body: formData
+      });
 
       toast.success(
         geoData.lat ? t('worker.evidenceWithGeo') : t('worker.evidenceUploaded')
@@ -158,12 +138,12 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   };
 
   const markNotificationRead = async (notificationId) => {
-    await supabase
-      .from('worker_notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
-    
-    fetchWorkerData();
+    try {
+      await fetchApi(`/worker/notifications/${notificationId}/read`, { method: 'PUT' });
+      fetchWorkerData();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
 

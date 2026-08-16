@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,37 +115,19 @@ export default function ReportForm({ onReportSubmitted }) {
     );
   };
 
-  const uploadImages = async () => {
-    if (selectedFiles.length === 0) return [];
-
-    setUploadingImages(true);
-    const uploadedUrls = [];
-
-    try {
-      for (const file of selectedFiles) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { data, error } = await supabase.storage
-          .from('waste-reports')
-          .upload(fileName, file);
-
-        if (error) throw error;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('waste-reports')
-          .getPublicUrl(fileName);
-
-        uploadedUrls.push(publicUrl);
-      }
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      throw error;
-    } finally {
-      setUploadingImages(false);
-    }
-
-    return uploadedUrls;
+  const buildFormData = () => {
+    const data = new FormData();
+    data.append('title', formData.title.trim());
+    data.append('description', formData.description.trim());
+    if (formData.address_text) data.append('addressText', formData.address_text.trim());
+    if (formData.location_lat) data.append('locationLat', formData.location_lat);
+    if (formData.location_lng) data.append('locationLng', formData.location_lng);
+    
+    selectedFiles.forEach((file) => {
+      data.append('images', file);
+    });
+    
+    return data;
   };
 
   const handleSubmit = async (e) => {
@@ -164,25 +145,13 @@ export default function ReportForm({ onReportSubmitted }) {
     setLoading(true);
 
     try {
-      // Upload images (or keep local previews if storage is local)
-      let photoUrls = [];
-      try {
-        photoUrls = await uploadImages();
-      } catch (uploadErr) {
-        console.warn('Storage upload note:', uploadErr);
-      }
+      setUploadingImages(true);
+      const submitData = buildFormData();
 
       // Submit report to Express REST API
-      const res = await fetchApi('/reports', {
+      const res = await fetchApi('/resident/reports', {
         method: 'POST',
-        body: JSON.stringify({
-          title: formData.title.trim(),
-          description: formData.description.trim(),
-          addressText: formData.address_text?.trim() || null,
-          locationLat: formData.location_lat,
-          locationLng: formData.location_lng,
-          photoUrls: photoUrls || []
-        })
+        body: submitData
       });
 
       toast({

@@ -43,7 +43,7 @@ export default function LeaderboardDashboard() {
 
   const fetchLeaderboardData = async () => {
     try {
-      const res = await fetchApi('/leaderboard');
+      const res = await fetchApi('/resident/leaderboard');
       const allUsers = res?.leaderboard || [];
 
       const residentsList = allUsers.filter(u => u.role === 'resident');

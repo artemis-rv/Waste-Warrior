@@ -13,23 +13,27 @@ exports.updatePickupStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status, segregation_done } = req.body;
-    const updated = await workerService.updatePickupStatus(req.user.id, id, status, segregation_done);
+    const workerId = req.user.id;
+
+    let updated = await workerService.updatePickupStatus(workerId, id, status, segregation_done);
+
+    if (req.file) {
+      const evidenceData = {
+        evidence_photo_url: `/uploads/evidence/${req.file.filename}`,
+        evidence_timestamp: new Date().toISOString(),
+        evidence_lat: req.body.evidenceLat ? parseFloat(req.body.evidenceLat) : null,
+        evidence_lng: req.body.evidenceLng ? parseFloat(req.body.evidenceLng) : null
+      };
+      updated = await workerService.updateEvidence(workerId, id, evidenceData);
+    }
+    
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
-exports.updateEvidence = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const evidenceData = req.body;
-    const updated = await workerService.updateEvidence(req.user.id, id, evidenceData);
-    res.json(updated);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+// updateEvidence has been merged into updatePickupStatus for FormData
 
 exports.markNotificationRead = async (req, res, next) => {
   try {

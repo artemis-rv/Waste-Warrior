@@ -30,7 +30,7 @@ export default function CollectionPointManagement() {
 
   const fetchPoints = async () => {
     try {
-      const data = await fetchApi('/api/admin/collection-points');
+      const data = await fetchApi('/admin/collection-points');
       setPoints(data || []);
     } catch (error) {
       console.error(error);
@@ -51,13 +51,13 @@ export default function CollectionPointManagement() {
 
     try {
       if (editingPoint) {
-        await fetchApi(`/api/admin/collection-points/${editingPoint.id}`, {
+        await fetchApi(`\/admin/collection-points/${editingPoint.id}`, {
           method: 'PUT',
           body: JSON.stringify({ ...dataToSubmit, id: editingPoint.id })
         });
         toast.success('Collection point updated successfully');
       } else {
-        await fetchApi('/api/admin/collection-points', {
+        await fetchApi('/admin/collection-points', {
           method: 'POST',
           body: JSON.stringify(dataToSubmit)
         });
@@ -77,7 +77,7 @@ export default function CollectionPointManagement() {
     if (!confirm('Are you sure you want to delete this collection point?')) return;
     
     try {
-      await fetchApi(`/api/admin/collection-points/${id}`, {
+      await fetchApi(`\/admin/collection-points/${id}`, {
         method: 'DELETE'
       });
       toast.success('Collection point deleted');

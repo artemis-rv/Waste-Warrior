@@ -32,7 +32,7 @@ export default function LearningModules() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await fetchApi('/learning/modules');
+      const res = await fetchApi('/resident/learning');
       setModules(res?.modules || []);
       setUserProgress(res?.progress || []);
       setCertificate(res?.certificates?.[0] || null);
@@ -105,8 +105,8 @@ export default function LearningModules() {
   const checkForCertificate = async () => {
      if (modules.length > 0 && userProgress.filter(p => p.is_completed).length === modules.length && !certificate) {
          try {
-            const { data, error } = await supabase.from('certifications').insert({ user_id: userProfile.id }).select().single();
-            if(!error) setCertificate(data);
+            const res = await fetchApi('/resident/learning/certificate', { method: 'POST' });
+            if(res.success) setCertificate(res.certificate);
          } catch(e) {}
      }
   };

@@ -38,7 +38,21 @@ const getLeaderboard = async (req, res) => {
 
 const submitReport = async (req, res) => {
   try {
-    const data = await residentService.submitReport(req.user.id, req.body);
+    let photo_urls = [];
+    if (req.files && req.files.length > 0) {
+      photo_urls = req.files.map(file => `/uploads/reports/${file.filename}`);
+    }
+
+    const reportData = {
+      title: req.body.title,
+      description: req.body.description,
+      address_text: req.body.addressText,
+      location_lat: req.body.locationLat ? parseFloat(req.body.locationLat) : null,
+      location_lng: req.body.locationLng ? parseFloat(req.body.locationLng) : null,
+      photo_urls
+    };
+
+    const data = await residentService.submitReport(req.user.id, reportData);
     res.status(201).json({ message: 'Report submitted', ...data });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -104,7 +118,16 @@ const getQuizQuestions = async (req, res, next) => {
       correct_answer: q.correctAnswer
     })));
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    next(error);
+  }
+};
+
+const createCertificate = async (req, res, next) => {
+  try {
+    const certificate = await residentService.createCertificate(req.user.id);
+    res.json({ success: true, certificate });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -119,5 +142,6 @@ module.exports = {
   getLearning,
   markVideoWatched,
   markQuizPassed,
-  getQuizQuestions
+  getQuizQuestions,
+  createCertificate,
 };

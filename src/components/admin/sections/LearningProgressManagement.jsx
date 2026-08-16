@@ -38,7 +38,7 @@ export default function LearningProgressManagement() {
     try {
       setLoading(true);
 
-      const data = await fetchApi('/api/admin/learning');
+      const data = await fetchApi('/admin/learning');
 
       setUsers(data.users || []);
       setModules(data.modules || []);
@@ -72,7 +72,7 @@ export default function LearningProgressManagement() {
 
   const handleResetProgress = async (userId) => {
     try {
-      await fetchApi(`/api/admin/learning/${userId}/reset`, {
+      await fetchApi(`\/admin/learning/${userId}/reset`, {
         method: 'DELETE'
       });
 

@@ -30,7 +30,7 @@ export default function CreditsManagement() {
 
   const fetchUsers = async () => {
     try {
-      const data = await fetchApi('/api/admin/users');
+      const data = await fetchApi('/admin/users');
       setUsers(data || []);
     } catch (error) {
       console.error(error);
@@ -39,7 +39,7 @@ export default function CreditsManagement() {
 
   const fetchAuditLog = async () => {
     try {
-      const data = await fetchApi('/api/admin/credits/logs');
+      const data = await fetchApi('/admin/credits/logs');
       setAuditLog(data || []);
     } catch (error) {
       console.error(error);
@@ -58,7 +58,7 @@ export default function CreditsManagement() {
     const finalAmount = formData.type === 'subtract' ? -amount : amount;
     
     try {
-      await fetchApi('/api/admin/credits', {
+      await fetchApi('/admin/credits', {
         method: 'POST',
         body: JSON.stringify({
           userId: formData.userId,

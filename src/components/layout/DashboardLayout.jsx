@@ -40,7 +40,7 @@ export default function DashboardLayout({ children, activeSection, onSectionChan
 
   const fetchNotificationCount = async () => {
     try {
-      const res = await fetchApi('/notifications');
+      const res = await fetchApi('/resident/notifications');
       const unread = (res?.notifications || []).filter(n => !n.isRead).length;
       setUnreadNotifications(unread);
     } catch (error) {

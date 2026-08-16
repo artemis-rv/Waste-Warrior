@@ -26,7 +26,7 @@ export default function CreditsSystem() {
 
   const fetchCreditsHistory = async () => {
     try {
-      const res = await fetchApi('/credits');
+      const res = await fetchApi('/resident/credits');
       setCreditsHistory(res?.logs || []);
     } catch (error) {
       console.error('Error fetching credits history:', error);
@@ -36,7 +36,7 @@ export default function CreditsSystem() {
 
   const fetchRedeemHistory = async () => {
     try {
-      const res = await fetchApi('/credits');
+      const res = await fetchApi('/resident/credits');
       setRedeemHistory(res?.redeems || []);
     } catch (error) {
       console.error('Error fetching redeem history:', error);
@@ -56,7 +56,7 @@ export default function CreditsSystem() {
 
     try {
       setLoading(true);
-      const res = await fetchApi('/credits/redeem', {
+      const res = await fetchApi('/resident/credits/redeem', {
         method: 'POST',
         body: JSON.stringify({ creditsUsed: creditsToRedeem })
       });

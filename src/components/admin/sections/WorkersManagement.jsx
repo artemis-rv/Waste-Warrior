@@ -23,7 +23,7 @@ export default function WorkersManagement() {
 
   const fetchWorkers = async () => {
     try {
-      const data = await fetchApi('/api/admin/workers');
+      const data = await fetchApi('/admin/workers');
       setWorkers(data || []);
     } catch (error) {
       console.error(error);
@@ -32,7 +32,7 @@ export default function WorkersManagement() {
 
   const fetchPendingReports = async () => {
     try {
-      const data = await fetchApi('/api/admin/reports/pending');
+      const data = await fetchApi('/admin/reports/pending');
       setReports(data || []);
     } catch (error) {
       console.error(error);
@@ -46,7 +46,7 @@ export default function WorkersManagement() {
     }
 
     try {
-      await fetchApi('/api/admin/pickups/assign', {
+      await fetchApi('/admin/pickups/assign', {
         method: 'POST',
         body: JSON.stringify({
           reportId: selectedReport,
