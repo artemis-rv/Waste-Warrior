@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { fetchApi } from '@/lib/api';
 
 const AuthContext = createContext({});
 
@@ -11,78 +12,57 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer profile fetch to avoid auth state callback deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id);
-          }, 0);
-        } else {
-          setUserProfile(null);
+    let mounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        const data = await fetchApi('/auth/me', { method: 'GET' });
+        if (mounted && data?.user) {
+          setUser(data.user);
+          setUserProfile(data.user); // Using backend response directly as profile
+          // Create a mock session object for compatibility if some frontend component explicitly requires it
+          setSession({ user: data.user });
         }
-        
-        setLoading(false);
+      } catch (error) {
+        // HTTP 401 unauthenticated is expected if no cookie
+        if (mounted) {
+          setUser(null);
+          setUserProfile(null);
+          setSession(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    );
+    };
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
-      setLoading(false);
-    });
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+    };
   }, []);
-
-  const fetchUserProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      setUserProfile(data);
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-    }
-  };
 
   const signUp = async (email, password, userData = {}) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: userData.full_name || '',
-            role: userData.role || 'resident'
-          }
-        }
+      const data = await fetchApi('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          email,
+          password,
+          fullName: userData.full_name || '',
+          // Explicitly omit role here; backend ignores it for public registration anyway
+        })
       });
 
-      if (error) throw error;
+      setUser(data.user);
+      setUserProfile(data.user);
+      setSession({ user: data.user });
 
       toast({
         title: "Success!",
-        description: "Please check your email to confirm your account.",
+        description: "Registration successful. Welcome!",
       });
 
       return { data, error: null };
@@ -98,12 +78,17 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const data = await fetchApi('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email,
+          password,
+        })
       });
 
-      if (error) throw error;
+      setUser(data.user);
+      setUserProfile(data.user);
+      setSession({ user: data.user });
 
       toast({
         title: "Welcome back!",
@@ -123,9 +108,8 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
+      await fetchApi('/auth/logout', { method: 'POST' });
+      
       setUser(null);
       setSession(null);
       setUserProfile(null);
@@ -144,6 +128,7 @@ export function AuthProvider({ children }) {
   };
 
   const updateProfile = async (updates) => {
+    // This method purposefully remains on Supabase for Steps 5-7 as requested.
     try {
       const { data, error } = await supabase
         .from('users')
@@ -154,6 +139,7 @@ export function AuthProvider({ children }) {
 
       if (error) throw error;
 
+      // Update the local state with the returned Supabase profile data
       setUserProfile(data);
       toast({
         title: "Success!",

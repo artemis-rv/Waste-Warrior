@@ -50,12 +50,9 @@ export default function AuthPage() {
     setResetMessage('');
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: window.location.origin + '/auth/update-password',
-      });
-
-      if (error) throw error;
-      setResetMessage('Password reset link has been sent to your email!');
+      // Password reset will be implemented in a future step.
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      throw new Error('Password reset is not yet supported on the new backend.');
     } catch (error) {
       setResetMessage('Error: ' + error.message);
     } finally {
