@@ -6,3 +6,328 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  resident
+  worker
+  admin
+  scrap_dealer
+
+  @@map("user_role")
+}
+
+enum ReportStatus {
+  pending
+  assigned
+  in_progress
+  resolved
+  rejected
+  escalated
+
+  @@map("report_status")
+}
+
+enum NotificationType {
+  report_update
+  credit_award
+  kit_distribution
+  worker_assignment
+  system
+  alert
+  success
+
+  @@map("notification_type")
+}
+
+enum PickupRequestStatus {
+  pending
+  accepted
+  in_progress
+  completed
+  cancelled
+
+  @@map("pickup_request_status")
+}
+
+model User {
+  id              String   @id @db.Uuid // Matches auth.users(id)
+  email           String   @unique
+  passwordHash    String   @map("password_hash")
+  fullName        String?  @map("full_name")
+  phone           String?
+  role            UserRole @default(resident)
+  credits         Int      @default(0)
+  language        String   @default("en")
+  avatarUrl       String?  @map("avatar_url")
+  address         String?
+  kitReceived     Boolean  @default(false) @map("kit_received")
+  isBanned        Boolean  @default(false) @map("is_banned")
+  isGreenChampion Boolean? @default(false) @map("is_green_champion")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  reports          Report[]               @relation("UserReports")
+  assignedReports  Report[]               @relation("WorkerReports")
+  creditsLog       CreditsLog[]           @relation("UserCredits")
+  awardedCredits   CreditsLog[]           @relation("AdminAwardedCredits")
+  redeems          Redeem[]
+  worker           Worker?
+  scrapDealer      ScrapDealer?
+  notifications    Notification[]
+  creditAuditLogs  CreditAuditLog[]
+  kitsAssigned     Kit[]
+  learningProgress UserLearningProgress[]
+  certifications   Certification[]
+  workerNotifs     WorkerNotification[]
+  scrapPickups     ScrapPickupRequest[]
+
+  @@map("users")
+}
+
+model Report {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String       @map("user_id") @db.Uuid
+  title            String
+  description      String
+  locationLat      Decimal?     @map("location_lat") @db.Decimal(10, 8)
+  locationLng      Decimal?     @map("location_lng") @db.Decimal(11, 8)
+  addressText      String?      @map("address_text")
+  photoUrls        String[]     @default([]) @map("photo_urls")
+  status           ReportStatus @default(pending)
+  assignedWorkerId String?      @map("assigned_worker_id") @db.Uuid
+  deadline         DateTime?    @db.Timestamptz
+  resolvedAt       DateTime?    @map("resolved_at") @db.Timestamptz
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime     @default(now()) @map("updated_at") @db.Timestamptz
+
+  isVerified        Boolean?  @map("is_verified")
+  verificationNotes String?   @map("verification_notes")
+  verifiedAt        DateTime? @map("verified_at") @db.Timestamptz
+  workerNotes       String?   @map("worker_notes")
+
+  segregationDone     Boolean?  @default(false) @map("segregation_done")
+  segregationVerified Boolean?  @default(false) @map("segregation_verified")
+  evidencePhotoUrl    String?   @map("evidence_photo_url")
+  evidenceTimestamp   DateTime? @map("evidence_timestamp") @db.Timestamptz
+  evidenceLat         Decimal?  @map("evidence_lat") @db.Decimal
+  evidenceLng         Decimal?  @map("evidence_lng") @db.Decimal
+
+  user                User                 @relation("UserReports", fields: [userId], references: [id], onDelete: Cascade)
+  assignedWorker      User?                @relation("WorkerReports", fields: [assignedWorkerId], references: [id])
+  workerNotifications WorkerNotification[]
+
+  @@map("reports")
+}
+
+model CreditsLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  amount      Int
+  reason      String
+  awardedById String?  @map("awarded_by") @db.Uuid
+  referenceId String?  @map("reference_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user      User  @relation("UserCredits", fields: [userId], references: [id], onDelete: Cascade)
+  awardedBy User? @relation("AdminAwardedCredits", fields: [awardedById], references: [id])
+
+  @@map("credits_log")
+}
+
+model Redeem {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  code        String    @unique
+  creditsUsed Int       @map("credits_used")
+  status      String    @default("active")
+  expiresAt   DateTime  @default(dbgenerated("(now() + '30 days'::interval)")) @map("expires_at") @db.Timestamptz
+  usedAt      DateTime? @map("used_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redeems")
+}
+
+model Worker {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @unique @map("user_id") @db.Uuid
+  vehicleId          String?   @map("vehicle_id")
+  currentLat         Decimal?  @map("current_lat") @db.Decimal(10, 8)
+  currentLng         Decimal?  @map("current_lng") @db.Decimal(11, 8)
+  lastLocationUpdate DateTime? @map("last_location_update") @db.Timestamptz
+  learningProgress   Int       @default(0) @map("learning_progress")
+  isActive           Boolean   @default(true) @map("is_active")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("workers")
+}
+
+model CollectionPoint {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  address      String
+  lat          Decimal  @db.Decimal(10, 8)
+  lng          Decimal  @db.Decimal(11, 8)
+  capacity     Int      @default(100)
+  currentLoad  Int      @default(0) @map("current_load")
+  contactPhone String?  @map("contact_phone")
+  workingHours String?  @default("9:00 AM - 6:00 PM") @map("working_hours")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@map("collection_points")
+}
+
+model ScrapDealer {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @unique @map("user_id") @db.Uuid
+  businessName  String   @map("business_name")
+  licenseNumber String?  @map("license_number")
+  serviceArea   String?  @map("service_area")
+  rates         Json?    @default("{}")
+  contactPhone  String?  @map("contact_phone")
+  workingHours  String?  @default("9:00 AM - 6:00 PM") @map("working_hours")
+  isVerified    Boolean  @default(false) @map("is_verified")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pickups ScrapPickupRequest[]
+
+  @@map("scrap_dealers")
+}
+
+model Notification {
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  title     String
+  message   String
+  type      NotificationType @default(system)
+  meta      Json?            @default("{}")
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model CreditAuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  amount     Int
+  reason     String
+  actionType String   @map("action_type")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_audit_log")
+}
+
+model Kit {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  items       String?
+  assignedTo  String?   @map("assigned_to") @db.Uuid
+  isDelivered Boolean   @default(false) @map("is_delivered")
+  deliveredAt DateTime? @map("delivered_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User? @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+
+  @@map("kits")
+}
+
+model LearningModule {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  description     String?
+  videoUrl        String   @map("video_url")
+  thumbnailUrl    String?  @map("thumbnail_url")
+  durationMinutes Int?     @map("duration_minutes")
+  orderIndex      Int      @default(0) @map("order_index")
+  isRequired      Boolean  @default(true) @map("is_required")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  progress UserLearningProgress[]
+
+  @@map("learning_modules")
+}
+
+model UserLearningProgress {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  moduleId           String    @map("module_id") @db.Uuid
+  isCompleted        Boolean   @default(false) @map("is_completed")
+  progressPercentage Int       @default(0) @map("progress_percentage")
+  completedAt        DateTime? @map("completed_at") @db.Timestamptz
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+  @@map("user_learning_progress")
+}
+
+model Certification {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  certificateUrl String?  @map("certificate_url")
+  issuedAt       DateTime @default(now()) @map("issued_at") @db.Timestamptz
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("certifications")
+}
+
+model WorkerNotification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workerId  String    @map("worker_id") @db.Uuid
+  reportId  String?   @map("report_id") @db.Uuid
+  title     String
+  message   String
+  type      String    @default("assignment")
+  isRead    Boolean?  @default(false) @map("is_read")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz
+
+  worker User    @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  report Report? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("worker_notifications")
+}
+
+model ScrapPickupRequest {
+  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String              @map("user_id") @db.Uuid
+  dealerId     String?             @map("dealer_id") @db.Uuid
+  residentName String              @map("resident_name")
+  contactPhone String              @map("contact_phone")
+  address      String
+  locationLat  Decimal?            @map("location_lat") @db.Decimal
+  locationLng  Decimal?            @map("location_lng") @db.Decimal
+  wasteType    String              @map("waste_type")
+  wasteVolume  Decimal             @map("waste_volume") @db.Decimal
+  photoUrls    String[]            @default([]) @map("photo_urls")
+  proposedRate Decimal?            @map("proposed_rate") @db.Decimal
+  status       PickupRequestStatus @default(pending)
+  notes        String?
+  completedAt  DateTime?           @map("completed_at") @db.Timestamptz
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime            @default(now()) @map("updated_at") @db.Timestamptz
+
+  user   User         @relation(fields: [userId], references: [id])
+  dealer ScrapDealer? @relation(fields: [dealerId], references: [id])
+
+  @@map("scrap_pickup_requests")
+}
