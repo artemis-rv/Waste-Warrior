@@ -238,6 +238,7 @@
   },
   "common": {
     "loading": "લોડ થઈ રહ્યું છે...",
+    "processing": "પ્રક્રિયા ચાલુ છે...",
     "error": "ભૂલ",
     "success": "સફળતા",
     "cancel": "રદ કરો",
@@ -246,6 +247,16 @@
     "delete": "કાઢી નાખો",
     "close": "બંધ કરો",
     "logout": "લૉગ આઉટ"
+  },
+  "auth": {
+    "signIn": "સાઇન ઇન કરો",
+    "signUp": "સાઇન અપ કરો",
+    "createAccount": "ખાતું બનાવો",
+    "password": "પાસવર્ડ",
+    "forgotPassword": "પાસવર્ડ ભૂલી ગયા?",
+    "backToLogin": "લૉગિન પર પાછા જાઓ",
+    "resetPassword": "પાસવર્ડ રીસેટ કરો",
+    "sendResetLink": "રીસેટ લિંક મોકલો"
   },
   "reportForm": {
     "title": "કચરો રિપોર્ટ કરો",

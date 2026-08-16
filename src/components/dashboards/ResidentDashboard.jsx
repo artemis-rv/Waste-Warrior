@@ -26,9 +26,8 @@ import {
   Activity
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import { fetchApi } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 import ReportForm from '@/components/forms/ReportForm';
 import CreditsSystem from '@/components/features/CreditsSystem';
 import { LeaderboardDashboard } from '@/components/modules/Leaderboard';
@@ -64,81 +63,56 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
 
   const fetchUserData = async () => {
     try {
-      setLoading(true);
-      const data = await fetchApi('/resident/dashboard', { method: 'GET' });
-      setReports(data.reports || []);
-      setNotifications(data.notifications || []);
+      // Fetch user's reports & notifications from Express REST API
+      const [reportsRes, notificationsRes] = await Promise.all([
+        fetchApi('/reports'),
+        fetchApi('/notifications')
+      ]);
+
+      const reportsData = reportsRes?.reports || [];
+      const notificationsData = notificationsRes?.notifications || [];
+
+      // Calculate stats
+      const totalReports = reportsData?.length || 0;
+      const resolvedReports = reportsData?.filter(r => r.status === 'resolved').length || 0;
+      const pendingReports = reportsData?.filter(r => r.status === 'pending').length || 0;
+
+      setReports(reportsData);
+      setNotifications(notificationsData);
       setStats({
-        totalReports: data.stats.totalReports,
-        resolvedReports: data.stats.resolvedReports,
-        pendingReports: data.stats.pendingReports,
-        totalCredits: data.stats.totalCredits,
+        totalReports,
+        resolvedReports,
+        pendingReports,
+        totalCredits: userProfile?.credits || 0,
       });
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load dashboard data',
-        variant: 'destructive',
-      });
+      console.error('Error fetching data from API:', error);
+      // Fallback gracefully without breaking UI
+      setReports([]);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
 
   const setupRealtimeListeners = () => {
-    // Listen for report status updates
-    const reportChannel = supabase
-      .channel('report_updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'reports',
-          filter: `user_id=eq.${userProfile?.id}`
-        },
-        (payload) => {
-          setReports(prev => 
-            prev.map(report => 
-              report.id === payload.new.id ? payload.new : report
-            )
-          );
-          
-          // Show notification for status change
-          toast({
-            title: 'Report Updated',
-            description: `Your report status changed to ${payload.new.status}`,
-          });
-        }
-      )
-      .subscribe();
-
-    // Listen for new notifications
-    const notificationChannel = supabase
-      .channel('user_notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userProfile?.id}`
-        },
-        (payload) => {
-          setNotifications(prev => [payload.new, ...prev]);
-          toast({
-            title: payload.new.title,
-            description: payload.new.message,
-          });
-        }
-      )
-      .subscribe();
+    // Realtime polling / fallback
+    const interval = setInterval(() => {
+      if (userProfile?.id) {
+        fetchUserData();
+      }
+    }, 15000);
 
     return () => {
-      supabase.removeChannel(reportChannel);
-      supabase.removeChannel(notificationChannel);
+      clearInterval(interval);
     };
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const getStatusColor = (status) => {
@@ -186,20 +160,19 @@ const renderOverviewSection = () => (
         >
           <div className="relative z-10">
             <h1 className="text-2xl font-bold mb-2 text-white">
-              Welcome, {userProfile?.full_name?.split(' ')[0] || 'Warrior'}! 
+              {t('dashboard.welcome', { name: userProfile?.full_name?.split(' ')[0] || 'Warrior' })}
             </h1>
             <p className="text-green-50 text-sm mb-6 opacity-90">
-              Ready to make an impact today?
+              {t('dashboard.welcomeSubtitle')}
             </p>
             
-            {/* 👇 YAHAN CHANGE KIYA HAI: Added style={{ color: ... }} */}
             <Button 
               onClick={() => onSectionChange('report')}
               className="w-full bg-white hover:bg-green-50 font-bold border-none"
-              style={{ color: '#15803d' }} // <--- MAGIC FIX: Text ab Dark Green dikhega
+              style={{ color: '#15803d' }}
             >
               <Camera className="w-4 h-4 mr-2" />
-              Report Waste
+              {t('dashboard.reportWaste')}
             </Button>
           </div>
         </div>
@@ -210,7 +183,7 @@ const renderOverviewSection = () => (
               <Coins className="w-6 h-6 text-green-600" />
            </div>
            <h2 className="text-3xl font-bold text-gray-900">{stats.totalCredits}</h2>
-           <p className="text-gray-500 text-sm font-medium">Green Points</p>
+           <p className="text-gray-500 text-sm font-medium">{t('dashboard.greenPoints')}</p>
         </div>
 
         {/* Card 3: Global Rank */}
@@ -219,16 +192,16 @@ const renderOverviewSection = () => (
               <TrendingUp className="w-6 h-6 text-blue-600" />
            </div>
            <h2 className="text-3xl font-bold text-gray-900">#{userProfile?.rank || "12"}</h2>
-           <p className="text-gray-500 text-sm font-medium">Global Rank</p>
+           <p className="text-gray-500 text-sm font-medium">{t('leaderboard.yourRank')}</p>
         </div>
       </div>
 
       {/* --- STATS ROW --- */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { title: "Reports Filed", value: stats.totalReports, icon: FileText, color: "#2563eb", bg: "#eff6ff" },
-          { title: "Resolved", value: stats.resolvedReports, icon: CheckCircle, color: "#059669", bg: "#ecfdf5" },
-          { title: "Pending", value: stats.pendingReports, icon: Clock, color: "#ea580c", bg: "#fff7ed" },
+          { title: t('dashboard.reportsLookup') || "Reports Filed", value: stats.totalReports, icon: FileText, color: "#2563eb", bg: "#eff6ff" },
+          { title: t('learning.completed') || "Resolved", value: stats.resolvedReports, icon: CheckCircle, color: "#059669", bg: "#ecfdf5" },
+          { title: t('dashboard.pending') || "Pending", value: stats.pendingReports, icon: Clock, color: "#ea580c", bg: "#fff7ed" },
         ].map((stat, index) => (
           <div key={index} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
@@ -241,19 +214,18 @@ const renderOverviewSection = () => (
           </div>
         ))}
       </div>
-    {/* --- QUICK ACTIONS (Updated: Map removed, Impact added) --- */}
+    {/* --- QUICK ACTIONS --- */}
       <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-3">Quick Actions</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-3">{t('dashboard.quickActions')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Camera, label: 'Report', action: 'report', color: 'text-green-600', bg: 'bg-green-50' },
-            // 👇 CHANGED: MapPin -> TrendingUp, Label: 'Impact', Action: 'impact'
-            { icon: TrendingUp, label: 'Impact', action: 'impact', color: 'text-blue-600', bg: 'bg-blue-50' },
-            { icon: Gift, label: 'Redeem', action: 'credits', color: 'text-purple-600', bg: 'bg-purple-50' },
-            { icon: FileText, label: 'Learn', action: 'learning', color: 'text-orange-600', bg: 'bg-orange-50' },
+            { icon: Camera, label: t('dashboard.reportWasteAction'), action: 'report', color: 'text-green-600', bg: 'bg-green-50' },
+            { icon: TrendingUp, label: t('dashboard.impact'), action: 'impact', color: 'text-blue-600', bg: 'bg-blue-50' },
+            { icon: Gift, label: t('dashboard.credits'), action: 'credits', color: 'text-purple-600', bg: 'bg-purple-50' },
+            { icon: FileText, label: t('dashboard.learning'), action: 'learning', color: 'text-orange-600', bg: 'bg-orange-50' },
           ].map((action) => (
             <div
-              key={action.label}
+              key={action.action}
               onClick={() => onSectionChange(action.action)}
               className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer flex flex-col items-center justify-center gap-2 text-center transition-all"
             >
@@ -268,7 +240,7 @@ const renderOverviewSection = () => (
       
       {/* --- RECENT ACTIVITY --- */}
       <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-3">Recent Activity</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-3">{t('admin.recentActivity')}</h2>
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <Tabs defaultValue="reports" className="w-full">
             <div className="border-b border-gray-100 px-4 pt-2">
@@ -280,13 +252,13 @@ const renderOverviewSection = () => (
                   value="reports" 
                   className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-700 text-gray-500 rounded-none px-0 pb-3 font-medium"
                 >
-                  Recent Reports
+                  {t('dashboard.recentReports')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="notifications" 
                   className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-green-600 data-[state=active]:text-green-700 text-gray-500 rounded-none px-0 pb-3 font-medium"
                 >
-                  Recent Notifications
+                  {t('dashboard.recentNotifications')}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -298,8 +270,8 @@ const renderOverviewSection = () => (
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${report.status === 'resolved' ? 'bg-green-500' : 'bg-orange-500'}`} />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{report.title || "Waste Report"}</p>
-                        <p className="text-xs text-gray-500">{new Date(report.created_at).toLocaleDateString()}</p>
+                        <p className="text-sm font-medium text-gray-900">{report.title || t('reportForm.title')}</p>
+                        <p className="text-xs text-gray-500">{formatDate(report.created_at)}</p>
                       </div>
                     </div>
                     <Badge variant="outline" className={`capitalize ${getStatusColor(report.status)} border-0`}>
@@ -307,7 +279,7 @@ const renderOverviewSection = () => (
                     </Badge>
                   </div>
                 )) : (
-                  <p className="text-center text-gray-400 py-8 text-sm">No recent reports found.</p>
+                  <p className="text-center text-gray-400 py-8 text-sm">{t('dashboard.noReports')}</p>
                 )}
               </TabsContent>
 
@@ -317,11 +289,11 @@ const renderOverviewSection = () => (
                      <Bell className="w-4 h-4 text-blue-500 mt-0.5" />
                      <div>
                         <p className="text-sm text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-400 mt-1">{formatDate(n.created_at)}</p>
                      </div>
                   </div>
                 )) : (
-                  <p className="text-center text-gray-400 py-8 text-sm">No new notifications.</p>
+                  <p className="text-center text-gray-400 py-8 text-sm">{t('dashboard.noNotifications')}</p>
                 )}
               </TabsContent>
             </div>
@@ -349,7 +321,7 @@ const renderOverviewSection = () => (
               onClick={() => onSectionChange('overview')}
               className="mb-4 pl-0 hover:pl-2 transition-all"
             >
-              ← Back to Overview
+              ← {t('dashboard.overview')}
             </Button>
             <ReportForm onSubmitSuccess={() => {
               fetchUserData();

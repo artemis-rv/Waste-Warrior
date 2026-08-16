@@ -14,10 +14,13 @@ const languages = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'hi', name: 'Hindi', nativeName: 'हिंदी' },
   { code: 'gu', name: 'Gujarati', nativeName: 'ગુજરાતી' },
+  { code: 'mr', name: 'Marathi', nativeName: 'मराठी' },
   { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்' },
+  { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ' },
+  { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
 ];
 
-export default function LanguageSelector() {
+export default function LanguageSelector({ className = '', variant = 'outline' }) {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -32,13 +35,15 @@ export default function LanguageSelector() {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant={variant}
           size="sm"
-          className="gap-2 bg-white text-[#006400] hover:bg-gray-100 border border-gray-300"
+          className={`gap-2 bg-white text-emerald-800 hover:bg-emerald-50 hover:text-emerald-900 border border-emerald-200 shadow-sm font-semibold px-3 py-1.5 rounded-lg opacity-100 ${className}`}
+          style={{ color: '#065f46', backgroundColor: '#ffffff' }}
         >
-          <Languages className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLanguage.nativeName}</span>
-          <span className="sm:hidden">{currentLanguage.code.toUpperCase()}</span>
+          <Languages className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span className="font-semibold text-xs sm:text-sm text-emerald-900 leading-none">
+            {currentLanguage.nativeName}
+          </span>
         </Button>
       </DropdownMenuTrigger>
 

@@ -232,6 +232,7 @@
   },
   "common": {
     "loading": "Loading...",
+    "processing": "Processing...",
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",
@@ -240,6 +241,16 @@
     "delete": "Delete",
     "close": "Close",
     "logout": "Log Out"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "createAccount": "Create Account",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "backToLogin": "Back to Login",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send Reset Link"
   },
   "reportForm": {
     "title": "Report Waste Issue",

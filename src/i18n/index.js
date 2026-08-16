@@ -5,13 +5,19 @@ import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import hi from './locales/hi.json';
 import gu from './locales/gu.json';
+import mr from './locales/mr.json';
 import ta from './locales/ta.json';
+import pa from './locales/pa.json';
+import ml from './locales/ml.json';
 
 const resources = {
   en: { translation: en },
   hi: { translation: hi },
   gu: { translation: gu },
+  mr: { translation: mr },
   ta: { translation: ta },
+  pa: { translation: pa },
+  ml: { translation: ml },
 };
 
 i18n

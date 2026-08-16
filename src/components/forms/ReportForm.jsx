@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { fetchApi } from '@/lib/api';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Camera, MapPin, Upload, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/hooks/use-toast';
-import { fetchApi } from '@/lib/api';
 
 export default function ReportForm({ onReportSubmitted }) {
   const { user } = useAuth();
@@ -164,19 +164,24 @@ export default function ReportForm({ onReportSubmitted }) {
     setLoading(true);
 
     try {
-      // Upload images first
-      const photoUrls = await uploadImages();
+      // Upload images (or keep local previews if storage is local)
+      let photoUrls = [];
+      try {
+        photoUrls = await uploadImages();
+      } catch (uploadErr) {
+        console.warn('Storage upload note:', uploadErr);
+      }
 
-      // Submit report using new backend API
-      const { report } = await fetchApi('/resident/reports', {
+      // Submit report to Express REST API
+      const res = await fetchApi('/reports', {
         method: 'POST',
         body: JSON.stringify({
           title: formData.title.trim(),
           description: formData.description.trim(),
-          address_text: formData.address_text.trim() || null,
-          location_lat: formData.location_lat,
-          location_lng: formData.location_lng,
-          photo_urls: photoUrls
+          addressText: formData.address_text?.trim() || null,
+          locationLat: formData.location_lat,
+          locationLng: formData.location_lng,
+          photoUrls: photoUrls || []
         })
       });
 
@@ -222,26 +227,26 @@ export default function ReportForm({ onReportSubmitted }) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title">Issue Title *</Label>
+            <Label htmlFor="title">{t('reportForm.issueTitle') || 'Issue Title *'}</Label>
             <Input
               id="title"
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="e.g., Overflowing garbage bin on Main Street"
+              placeholder={t('reportForm.titlePlaceholder') || 'e.g., Overflowing garbage bin on Main Street'}
               required
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="description">{t('reportForm.description') || 'Description *'}</Label>
             <Textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              placeholder="Please describe the waste issue in detail..."
+              placeholder={t('reportForm.descPlaceholder') || 'Please describe the waste issue in detail...'}
               rows={3}
               required
             />
@@ -249,14 +254,14 @@ export default function ReportForm({ onReportSubmitted }) {
 
           {/* Address */}
           <div className="space-y-2">
-            <Label htmlFor="address_text">Address/Location</Label>
+            <Label htmlFor="address_text">{t('reportForm.addressLabel') || 'Address / Location'}</Label>
             <div className="flex gap-2">
               <Input
                 id="address_text"
                 name="address_text"
                 value={formData.address_text}
                 onChange={handleInputChange}
-                placeholder="Enter address or location details"
+                placeholder={t('reportForm.addressPlaceholder') || 'Enter address or location details'}
                 className="flex-1"
               />
               <Button
@@ -264,20 +269,21 @@ export default function ReportForm({ onReportSubmitted }) {
                 variant="outline"
                 onClick={getCurrentLocation}
                 className="px-3"
+                title={t('reportForm.getCurrentLocation') || 'Get current GPS location'}
               >
                 <MapPin className="h-4 w-4" />
               </Button>
             </div>
             {formData.location_lat && formData.location_lng && (
               <p className="text-sm text-muted-foreground">
-                Location captured: {formData.location_lat.toFixed(6)}, {formData.location_lng.toFixed(6)}
+                {t('reportForm.locationCaptured')}: {formData.location_lat.toFixed(6)}, {formData.location_lng.toFixed(6)}
               </p>
             )}
           </div>
 
           {/* Photo Upload */}
           <div className="space-y-2">
-            <Label htmlFor="photos">Photos (up to 3)</Label>
+            <Label htmlFor="photos">{t('reportForm.photosLabel') || 'Photos (up to 3)'}</Label>
             <div className="border-2 border-dashed border-muted rounded-lg p-4">
               <input
                 id="photos"
@@ -293,7 +299,7 @@ export default function ReportForm({ onReportSubmitted }) {
               >
                 <Upload className="h-8 w-8 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  Click to upload photos or drag and drop
+                  {t('reportForm.uploadHint') || 'Click to upload photos or drag and drop'}
                 </span>
               </label>
             </div>

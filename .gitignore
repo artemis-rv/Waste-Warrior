@@ -29,5 +29,8 @@ dist-ssr
 
 .npm
 .env
+backend/.env
+backend/pg_data
+backend/scratch
 
 config.toml

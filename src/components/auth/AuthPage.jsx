@@ -5,9 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import WasteWarriorLogo from '@/assets/waste-warrior.jpg';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import LanguageSelector from '@/components/ui/language-selector';
+import { useTranslation } from 'react-i18next';
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
@@ -73,16 +76,19 @@ export default function AuthPage() {
         className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative"
       >
         
-        {/* --- CLOSE BUTTON --- */}
-        <button 
-          onClick={() => navigate('/')}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all z-10"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* --- TOP BAR: LANGUAGE SELECTOR & CLOSE BUTTON --- */}
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+          <LanguageSelector />
+          <button 
+            onClick={() => navigate('/')}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-        <div className="p-8 pt-12">
+        <div className="p-8 pt-16">
           
           {/* --- LOGO & HEADER --- */}
           <div className="text-center mb-8">
@@ -146,7 +152,7 @@ export default function AuthPage() {
                 onClick={() => { setShowForgotPassword(false); setResetMessage(''); }}
                 className="w-full mt-4 text-sm text-gray-500 hover:text-emerald-600 font-medium"
               >
-                ← Back to Login
+                ← {t('auth.backToLogin') || 'Back to Login'}
               </button>
             </motion.div>
           ) : (
@@ -163,7 +169,7 @@ export default function AuthPage() {
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Sign In
+                  {t('auth.signIn') || 'Sign In'}
                 </button>
                 <button
                   type="button"
@@ -174,7 +180,7 @@ export default function AuthPage() {
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  Sign Up
+                  {t('auth.signUp') || 'Sign Up'}
                 </button>
               </div>
 
@@ -189,10 +195,10 @@ export default function AuthPage() {
                       className="space-y-4 overflow-hidden"
                     >
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('worker.name') || 'Full Name'}</label>
                         <input
                           type="text"
-                          placeholder="John Doe"
+                          placeholder={t('worker.name') || 'John Doe'}
                           value={formData.full_name}
                           onChange={(e) => handleInputChange('full_name', e.target.value)}
                           required={isSignUp}
@@ -200,7 +206,7 @@ export default function AuthPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('worker.phone') || 'Phone Number'}</label>
                         <input
                           type="tel"
                           placeholder="+91 98765 43210"
@@ -214,7 +220,7 @@ export default function AuthPage() {
                 </AnimatePresence>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('worker.email') || 'Email Address'}</label>
                   <input
                     type="email"
                     placeholder="name@example.com"
@@ -226,7 +232,7 @@ export default function AuthPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.password') || 'Password'}</label>
                   <input
                     type="password"
                     placeholder="••••••••"
@@ -244,28 +250,26 @@ export default function AuthPage() {
                       onClick={() => setShowForgotPassword(true)}
                       className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                     >
-                      Forgot Password?
+                      {t('auth.forgotPassword') || 'Forgot Password?'}
                     </button>
                   </div>
                 )}
 
-                {/* --- FIX: INLINE CSS APPLIED HERE --- */}
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading}
-                  // FORCE INLINE CSS: Green Background, White Text
                   style={{ backgroundColor: '#059669', color: '#ffffff', marginTop: '1rem' }}
                   className="w-full py-3.5 font-bold rounded-lg shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed border border-transparent"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-                      Processing...
+                      {t('common.processing') || 'Processing...'}
                     </span>
                   ) : (
-                    isSignUp ? 'Create Account' : 'Sign In'
+                    isSignUp ? (t('auth.createAccount') || 'Create Account') : (t('auth.signIn') || 'Sign In')
                   )}
                 </motion.button>
               </form>

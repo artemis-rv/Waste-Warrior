@@ -18,12 +18,13 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import { fetchApi } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export default function UserProfile() {
   const { userProfile, updateProfile } = useAuth();
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,10 +44,12 @@ export default function UserProfile() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      const { user } = await fetchApi('/resident/profile', {
-        method: 'PUT',
-        body: JSON.stringify(formData)
-      });
+      const { error } = await supabase
+        .from('users')
+        .update(formData)
+        .eq('id', userProfile.id);
+
+      if (error) throw error;
 
       await updateProfile();
       setIsEditing(false);
@@ -97,9 +100,9 @@ export default function UserProfile() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <h2 className="text-2xl font-bold text-foreground mb-2">Your Profile</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">{t('dashboard.profile') || 'Your Profile'}</h2>
         <p className="text-muted-foreground">
-          Manage your account information and preferences
+          {t('dealer.editProfile') || 'Manage your account information and preferences'}
         </p>
       </motion.div>
 
@@ -134,7 +137,7 @@ export default function UserProfile() {
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <Award className="h-6 w-6 text-primary mx-auto mb-2" />
                 <div className="font-semibold text-lg">{userProfile?.credits || 0}</div>
-                <div className="text-sm text-muted-foreground">Green Points</div>
+                <div className="text-sm text-muted-foreground">{t('dashboard.greenPoints')}</div>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <Calendar className="h-6 w-6 text-secondary mx-auto mb-2" />
@@ -142,21 +145,21 @@ export default function UserProfile() {
                   {userProfile?.created_at ? 
                     new Date(userProfile.created_at).toLocaleDateString() : 'N/A'}
                 </div>
-                <div className="text-sm text-muted-foreground">Member Since</div>
+                <div className="text-sm text-muted-foreground">{t('worker.date')}</div>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <Settings className="h-6 w-6 text-warning mx-auto mb-2" />
                 <div className="font-semibold text-lg">
-                  {userProfile?.kit_received ? 'Yes' : 'No'}
+                  {userProfile?.kit_received ? t('dashboard.received') : t('dashboard.pending')}
                 </div>
-                <div className="text-sm text-muted-foreground">Kit Received</div>
+                <div className="text-sm text-muted-foreground">{t('dashboard.kitStatus')}</div>
               </div>
             </div>
 
             {/* Profile Information */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Personal Information</h3>
+                <h3 className="text-lg font-semibold">{t('worker.profile')}</h3>
                 {!isEditing ? (
                   <Button 
                     variant="outline" 
@@ -164,7 +167,7 @@ export default function UserProfile() {
                     onClick={() => setIsEditing(true)}
                   >
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit
+                    {t('common.edit')}
                   </Button>
                 ) : (
                   <div className="flex gap-2">
@@ -174,7 +177,7 @@ export default function UserProfile() {
                       onClick={handleCancel}
                       disabled={loading}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button 
                       size="sm"
@@ -182,7 +185,7 @@ export default function UserProfile() {
                       disabled={loading}
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      {loading ? 'Saving...' : 'Save'}
+                      {loading ? t('common.loading') : t('common.save')}
                     </Button>
                   </div>
                 )}
@@ -192,7 +195,7 @@ export default function UserProfile() {
                 <div className="space-y-2">
                   <Label htmlFor="full_name">
                     <User className="h-4 w-4 inline mr-2" />
-                    Full Name
+                    {t('worker.name')}
                   </Label>
                   {isEditing ? (
                     <Input
@@ -200,11 +203,11 @@ export default function UserProfile() {
                       name="full_name"
                       value={formData.full_name}
                       onChange={handleInputChange}
-                      placeholder="Enter your full name"
+                      placeholder={t('worker.name')}
                     />
                   ) : (
                     <div className="p-3 bg-muted/30 rounded-md">
-                      {userProfile?.full_name || 'Not provided'}
+                      {userProfile?.full_name || '—'}
                     </div>
                   )}
                 </div>
@@ -212,17 +215,17 @@ export default function UserProfile() {
                 <div className="space-y-2">
                   <Label htmlFor="email">
                     <Mail className="h-4 w-4 inline mr-2" />
-                    Email
+                    {t('worker.email')}
                   </Label>
                   <div className="p-3 bg-muted/30 rounded-md text-muted-foreground">
-                    {userProfile?.email} (Cannot be changed)
+                    {userProfile?.email}
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">
                     <Phone className="h-4 w-4 inline mr-2" />
-                    Phone Number
+                    {t('worker.phone')}
                   </Label>
                   {isEditing ? (
                     <Input
@@ -230,11 +233,11 @@ export default function UserProfile() {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      placeholder="Enter your phone number"
+                      placeholder={t('worker.phone')}
                     />
                   ) : (
                     <div className="p-3 bg-muted/30 rounded-md">
-                      {userProfile?.phone || 'Not provided'}
+                      {userProfile?.phone || '—'}
                     </div>
                   )}
                 </div>
@@ -242,7 +245,7 @@ export default function UserProfile() {
                 <div className="space-y-2">
                   <Label htmlFor="address">
                     <MapPin className="h-4 w-4 inline mr-2" />
-                    Address
+                    {t('dealer.address')}
                   </Label>
                   {isEditing ? (
                     <Input
@@ -250,11 +253,11 @@ export default function UserProfile() {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      placeholder="Enter your address"
+                      placeholder={t('dealer.address')}
                     />
                   ) : (
                     <div className="p-3 bg-muted/30 rounded-md">
-                      {userProfile?.address || 'Not provided'}
+                      {userProfile?.address || '—'}
                     </div>
                   )}
                 </div>

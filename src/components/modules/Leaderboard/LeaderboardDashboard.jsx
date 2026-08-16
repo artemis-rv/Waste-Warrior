@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { fetchApi } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,53 +22,87 @@ export default function LeaderboardDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [stats, setStats] = useState({
     totalReports: 0,
-    totalUsers: 0,
-    monthlyReports: 0
+    totalParticipants: 0,
+    totalPoints: 0,
+    totalPickups: 0,
+    activeStreak: 0
   });
 
   useEffect(() => {
     fetchLeaderboardData();
-    fetchStats();
     
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('leaderboard-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'users'
-      }, () => {
-        fetchLeaderboardData();
-      })
-      .subscribe();
+    // Polling interval for live updates
+    const interval = setInterval(() => {
+      fetchLeaderboardData();
+    }, 15000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, []);
 
   const fetchLeaderboardData = async () => {
     try {
-      const data = await fetchApi('/resident/leaderboard');
-      setResidents(data.residents || []);
-      setWorkers(data.workers || []);
-      if (data.stats) {
-        setStats(data.stats);
-      }
+      const res = await fetchApi('/leaderboard');
+      const allUsers = res?.leaderboard || [];
+
+      const residentsList = allUsers.filter(u => u.role === 'resident');
+      const workersList = allUsers.filter(u => u.role === 'worker');
+
+      setResidents(residentsList);
+      setWorkers(workersList);
+
+      const topResident = residentsList[0];
+      const topWorker = workersList[0];
+
+      setTopPerformers({
+        resident: topResident || null,
+        worker: topWorker || null
+      });
+
+      setStats({
+        totalParticipants: allUsers.length,
+        totalPoints: allUsers.reduce((sum, u) => sum + (u.credits || 0), 0),
+        totalPickups: allUsers.reduce((sum, u) => sum + (u.totalReports || 0), 0),
+        activeStreak: 12
+      });
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      console.error('Error fetching leaderboard from API:', error);
+      setResidents([]);
+      setWorkers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const enrichUserData = async (users) => {
-    return users; // Handled by backend now
-  };
 
   const fetchStats = async () => {
-    // Stats are now fetched alongside leaderboard data to reduce requests
-    // Kept for structure compatibility, but functionality moved to fetchLeaderboardData
+    try {
+      const { count: totalReports } = await supabase
+        .from('reports')
+        .select('*', { count: 'exact', head: true });
+
+      const { count: totalUsers } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const { count: monthlyReports } = await supabase
+        .from('reports')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth.toISOString());
+
+      setStats({
+        totalReports: totalReports || 0,
+        totalUsers: totalUsers || 0,
+        monthlyReports: monthlyReports || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   };
 
   const renderLeaderboardList = (data) => (

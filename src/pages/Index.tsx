@@ -5,9 +5,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import WasteWarriorLogo from '@/assets/waste-warrior.jpg';
 import HeroIllustration from '@/assets/hero-illustration.jpg';
+import LanguageSelector from '@/components/ui/language-selector';
+import { useTranslation } from 'react-i18next';
 
 const Index = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   
   return (
     <div className="min-h-screen bg-[#F7FAFC] relative overflow-hidden">
@@ -38,14 +41,13 @@ const Index = () => {
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-1/4 w-64 h-64 rounded-full bg-gradient-to-br from-[#6D28D9]/10 to-[#EF4444]/10 blur-3xl"
+          className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-gradient-to-br from-[#00A86B]/20 to-[#4F46E5]/20 blur-3xl"
           animate={{
-            scale: [1, 1.4, 1],
-            x: [0, 50, 0],
-            y: [0, -30, 0],
+            scale: [1.2, 1, 1.2],
+            rotate: [90, 0, 90],
           }}
           transition={{
-            duration: 18,
+            duration: 25,
             repeat: Infinity,
             ease: "linear"
           }}
@@ -74,29 +76,30 @@ const Index = () => {
             {/* Center Navigation */}
             <div className="hidden md:flex items-center gap-8">
               <a href="#about" className="text-[#1F2937] hover:text-[#00A86B] transition-colors font-medium">
-                About
+                {t('dashboard.overview')}
               </a>
               <Link to="/dashboard" className="text-[#1F2937] hover:text-[#00A86B] transition-colors font-medium">
-                Leaderboard
+                {t('dashboard.champions')}
               </Link>
             </div>
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
+              <LanguageSelector />
               {user ? (
                 <Button asChild className="bg-[#00A86B] hover:bg-[#00A86B]/90">
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to="/dashboard">{t('admin.dashboard')}</Link>
                 </Button>
               ) : (
                 <>
                   <Button asChild variant="ghost" className="hidden sm:flex">
                     <Link to="/auth">
                       <LogIn className="h-4 w-4 mr-2" />
-                      Log In
+                      {t('common.logout') === 'लॉगआउट' ? 'लॉग इन' : 'Log In'}
                     </Link>
                   </Button>
                   <Button asChild className="bg-[#00A86B] hover:bg-[#00A86B]/90">
-                    <Link to="/auth">Sign Up</Link>
+                    <Link to="/auth">{t('dealer.registerAsDealer') ? 'Sign Up' : 'Sign Up'}</Link>
                   </Button>
                 </>
               )}
@@ -131,7 +134,7 @@ const Index = () => {
                 {user ? (
                   <Button asChild size="lg" className="text-lg px-8 py-6 bg-[#00A86B] hover:bg-[#00A86B]/90 shadow-lg hover:shadow-xl transition-all">
                     <Link to="/dashboard">
-                      Go to Dashboard
+                      {t('admin.dashboard')}
                     </Link>
                   </Button>
                 ) : (
@@ -142,7 +145,7 @@ const Index = () => {
                     >
                       <Button asChild size="lg" className="text-lg px-8 py-6 bg-[#00A86B] hover:bg-[#00A86B]/90 shadow-lg hover:shadow-xl transition-all">
                         <Link to="/auth">
-                          Get Started Now
+                          {t('learning.startModule') || 'Get Started Now'}
                         </Link>
                       </Button>
                     </motion.div>
@@ -152,7 +155,7 @@ const Index = () => {
                     >
                       <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2 border-[#00A86B] text-[#00A86B] hover:bg-[#00A86B]/10">
                         <a href="#about">
-                          Learn More
+                          {t('dashboard.learning') || 'Learn More'}
                         </a>
                       </Button>
                     </motion.div>

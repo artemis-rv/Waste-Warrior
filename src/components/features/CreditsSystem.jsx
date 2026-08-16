@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, Gift, History, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
-import { fetchApi } from '@/lib/api';
 
 export default function CreditsSystem() {
   const { user, userProfile } = useAuth();
@@ -20,61 +19,63 @@ export default function CreditsSystem() {
 
   useEffect(() => {
     if (user) {
-      fetchCreditsData();
+      fetchCreditsHistory();
+      fetchRedeemHistory();
     }
   }, [user]);
 
-  const fetchCreditsData = async () => {
+  const fetchCreditsHistory = async () => {
     try {
-      const data = await fetchApi('/resident/credits', { method: 'GET' });
-      setCreditsHistory(data.history || []);
-      setRedeemHistory(data.redeems || []);
+      const res = await fetchApi('/credits');
+      setCreditsHistory(res?.logs || []);
     } catch (error) {
-      console.error('Error fetching credits data:', error);
+      console.error('Error fetching credits history:', error);
+      setCreditsHistory([]);
+    }
+  };
+
+  const fetchRedeemHistory = async () => {
+    try {
+      const res = await fetchApi('/credits');
+      setRedeemHistory(res?.redeems || []);
+    } catch (error) {
+      console.error('Error fetching redeem history:', error);
+      setRedeemHistory([]);
     }
   };
 
   const generateRedeemCode = async (creditsToRedeem) => {
-    if (creditsToRedeem > userProfile?.credits) {
+    if (creditsToRedeem > (userProfile?.credits || 0)) {
       toast({
-        title: t('credits.insufficient') || 'Insufficient credits',
-        description: t('credits.insufficientDesc') || "You don't have enough credits for this redemption",
-        variant: "destructive"
+        title: t('credits.insufficient'),
+        description: t('credits.insufficientDesc'),
+        variant: 'destructive',
       });
       return;
     }
-
-    if (creditsToRedeem < 50) {
-      toast({
-        title: t('credits.minimum') || 'Minimum redemption',
-        description: t('credits.minimumDesc') || 'Minimum 50 credits required for redemption',
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
 
     try {
-      const data = await fetchApi('/resident/credits/redeem', {
+      setLoading(true);
+      const res = await fetchApi('/credits/redeem', {
         method: 'POST',
-        body: JSON.stringify({ amount: creditsToRedeem })
+        body: JSON.stringify({ creditsUsed: creditsToRedeem })
       });
 
-      toast({
-        title: t('credits.redeemSuccessTitle') || 'Redeem code generated!',
-        description: t('credits.redeemSuccessDesc', { code: data.code }) || `Your redeem code: ${data.code}. Save this code to use at participating stores.`
-      });
-
-      // Refresh data
-      fetchCreditsData();
-
+      if (res?.redeem) {
+        setRedeemCode(res.redeem.code);
+        toast({
+          title: t('credits.redeemSuccessTitle'),
+          description: t('credits.redeemSuccessDesc', { code: res.redeem.code }),
+        });
+        fetchCreditsHistory();
+        fetchRedeemHistory();
+      }
     } catch (error) {
-      console.error('Error generating redeem code:', error);
+      console.error('Error redeeming credits:', error);
       toast({
-        title: t('common.error') || 'Error',
-        description: error.message || t('credits.redeemError') || "Failed to generate redeem code",
-        variant: "destructive"
+        title: t('credits.redeemError'),
+        description: error.message || 'Failed to redeem credits',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -82,7 +83,10 @@ export default function CreditsSystem() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

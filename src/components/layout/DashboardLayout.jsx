@@ -3,8 +3,8 @@ import { Navigate } from 'react-router-dom';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { Recycle, Bell, LogOut, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { fetchApi } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import LanguageSelector from '@/components/ui/language-selector';
 import NotificationDropdown from '@/components/layout/NotificationDropdown';
 import { useTranslation } from 'react-i18next';
@@ -40,10 +40,11 @@ export default function DashboardLayout({ children, activeSection, onSectionChan
 
   const fetchNotificationCount = async () => {
     try {
-      const data = await fetchApi('/resident/notifications');
-      setUnreadNotifications(data.count || 0);
+      const res = await fetchApi('/notifications');
+      const unread = (res?.notifications || []).filter(n => !n.isRead).length;
+      setUnreadNotifications(unread);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error fetching notifications from API:', error);
     }
   };
 
@@ -127,9 +128,7 @@ export default function DashboardLayout({ children, activeSection, onSectionChan
 
            {/* Right Side Icons (Always Visible) */}
             <div className="flex items-center space-x-2 md:space-x-4">
-              <div className="bg-white/10 rounded-full px-2 py-1 hidden sm:block">
-                 <LanguageSelector />
-              </div>
+              <LanguageSelector />
 
               {/* Notification Bell */}
               <motion.button
@@ -145,6 +144,18 @@ export default function DashboardLayout({ children, activeSection, onSectionChan
                     {unreadNotifications > 9 ? '9+' : unreadNotifications}
                   </span>
                 )}
+              </motion.button>
+
+              {/* Desktop Logout Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={signOut}
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white/90 hover:text-white hover:bg-white/20 rounded-full transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
               </motion.button>
               
               {/* Profile Dropdown Container (ONLY used for Notification dropdown positioning now) */}

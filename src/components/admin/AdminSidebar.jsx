@@ -2,29 +2,32 @@ import { motion } from 'framer-motion';
 import { Map, MapPin, Users, Award, Coins, Package, Briefcase, FileText, CheckSquare, Download, LayoutDashboard, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-const navigationItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'map', label: 'Map & Tracking', icon: Map },
-  { id: 'collection-points', label: 'Collection Points', icon: MapPin },
-  { id: 'users', label: 'User Management', icon: Users },
-  { id: 'champions', label: 'Green Champions', icon: Award },
-  { id: 'credits', label: 'Credits & Penalties', icon: Coins },
-  { id: 'kits', label: 'Kit Distribution', icon: Package },
-  { id: 'workers', label: 'Workers Management', icon: Briefcase },
-  { id: 'reports', label: 'Report Monitoring', icon: FileText },
-  { id: 'verification', label: 'Visit Verification', icon: CheckSquare },
-  { id: 'learning-progress', label: 'Learning Progress', icon: BookOpen },
-  { id: 'export', label: 'Export Reports', icon: Download },
-];
+import { useTranslation } from 'react-i18next';
 
 export default function AdminSidebar({ activeSection, onSectionChange }) {
+  const { t } = useTranslation();
+
+  const navigationItems = [
+    { id: 'dashboard', label: t('admin.dashboard') || 'Dashboard', icon: LayoutDashboard },
+    { id: 'map', label: t('admin.mapTracking') || 'Map & Tracking', icon: Map },
+    { id: 'collection-points', label: t('admin.collectionPoints') || 'Collection Points', icon: MapPin },
+    { id: 'users', label: t('admin.users') || 'User Management', icon: Users },
+    { id: 'champions', label: t('admin.champions') || 'Green Champions', icon: Award },
+    { id: 'credits', label: t('admin.credits') || 'Credits & Penalties', icon: Coins },
+    { id: 'kits', label: t('admin.kits') || 'Kit Distribution', icon: Package },
+    { id: 'workers', label: t('admin.workers') || 'Workers Management', icon: Briefcase },
+    { id: 'reports', label: t('admin.reports') || 'Report Monitoring', icon: FileText },
+    { id: 'verification', label: t('admin.verification') || 'Visit Verification', icon: CheckSquare },
+    { id: 'learning-progress', label: t('admin.learningProgress') || 'Learning Progress', icon: BookOpen },
+    { id: 'export', label: t('admin.exportReports') || t('admin.export') || 'Export Reports', icon: Download },
+  ];
+
   return (
     <div className="w-64 border-r bg-card h-full">
       <div className="p-6 border-b">
         <h2 className="text-xl font-bold text-primary flex items-center gap-2">
           <LayoutDashboard className="h-6 w-6" />
-          Admin Panel
+          {t('admin.dashboard') || 'Admin Panel'}
         </h2>
       </div>
       

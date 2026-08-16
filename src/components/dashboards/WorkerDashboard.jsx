@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { fetchApi } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,41 +40,32 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
     try {
       setLoading(true);
       
-      const data = await fetchApi('/api/worker/dashboard');
+      const [reportsRes, notificationsRes] = await Promise.all([
+        fetchApi('/reports'),
+        fetchApi('/notifications')
+      ]);
       
-      setAssignedReports(data.reports || []);
-      setWorkerProfile(data.profile);
-      setNotifications(data.notifications || []);
+      setAssignedReports(reportsRes?.reports || []);
+      setWorkerProfile(userProfile || { name: user?.fullName || 'Worker' });
+      setNotifications(notificationsRes?.notifications || []);
     } catch (error) {
-      console.error('Error fetching worker data:', error);
-      toast.error('Failed to load worker data');
+      console.error('Error fetching worker data from API:', error);
+      setAssignedReports([]);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   };
 
   const subscribeToNotifications = () => {
-    const channel = supabase
-      .channel('worker-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'worker_notifications',
-          filter: `worker_id=eq.${user.id}`
-        },
-        (payload) => {
-          setNotifications(prev => [payload.new, ...prev]);
-          toast.success(payload.new.title, {
-            description: payload.new.message
-          });
-        }
-      )
-      .subscribe();
+    const interval = setInterval(() => {
+      if (user?.id) {
+        fetchWorkerData();
+      }
+    }, 15000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   };
 
@@ -88,10 +79,12 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      await fetchApi(`/api/worker/pickups/${reportId}/status`, {
-        method: 'PUT',
-        body: JSON.stringify(updateData)
-      });
+      const { error } = await supabase
+        .from('reports')
+        .update(updateData)
+        .eq('id', reportId);
+
+      if (error) throw error;
 
       toast.success(t('worker.statusUpdated'));
       fetchWorkerData();
@@ -139,15 +132,18 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
         .from('waste-reports')
         .getPublicUrl(filePath);
 
-      await fetchApi(`/api/worker/pickups/${reportId}/evidence`, {
-        method: 'PUT',
-        body: JSON.stringify({ 
+      const { error: updateError } = await supabase
+        .from('reports')
+        .update({ 
           evidence_photo_url: publicUrl,
           evidence_timestamp: new Date().toISOString(),
           evidence_lat: geoData.lat,
-          evidence_lng: geoData.lng
+          evidence_lng: geoData.lng,
+          status: 'in_progress'
         })
-      });
+        .eq('id', reportId);
+
+      if (updateError) throw updateError;
 
       toast.success(
         geoData.lat ? t('worker.evidenceWithGeo') : t('worker.evidenceUploaded')
@@ -162,14 +158,12 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   };
 
   const markNotificationRead = async (notificationId) => {
-    try {
-      await fetchApi(`/api/worker/notifications/${notificationId}/read`, {
-        method: 'PUT'
-      });
-      fetchWorkerData();
-    } catch (error) {
-      console.error('Error marking notification read:', error);
-    }
+    await supabase
+      .from('worker_notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+    
+    fetchWorkerData();
   };
 
 
