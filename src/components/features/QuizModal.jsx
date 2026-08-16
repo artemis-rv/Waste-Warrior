@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, Trophy, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
 
 export default function QuizModal({ module, onClose, onComplete }) {
@@ -23,12 +23,7 @@ export default function QuizModal({ module, onClose, onComplete }) {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('quiz_questions')
-        .select('*')
-        .eq('module_id', module.id);
-
-      if (error) throw error;
+      const data = await fetchApi(`/resident/learning/${module.id}/questions`);
       setQuestions(data || []);
     } catch (error) {
       console.error('Error fetching questions:', error);

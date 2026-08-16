@@ -24,5 +24,6 @@ router.post('/credits/redeem', residentController.redeemCredits);
 router.get('/learning', residentController.getLearning);
 router.post('/learning/video', residentController.markVideoWatched);
 router.post('/learning/quiz', residentController.markQuizPassed);
+router.get('/learning/:moduleId/questions', residentController.getQuizQuestions);
 
 module.exports = router;

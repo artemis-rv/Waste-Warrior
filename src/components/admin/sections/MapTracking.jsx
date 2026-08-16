@@ -24,7 +24,7 @@ export default function MapTracking() {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || '***REMOVED***';
+    const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN;
     mapboxgl.accessToken = mapboxToken;
 
     map.current = new mapboxgl.Map({

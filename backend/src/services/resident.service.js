@@ -254,6 +254,11 @@ class ResidentService {
 
     return { progress, certificate };
   }
+  async getQuizQuestions(moduleId) {
+    return await prisma.quizQuestion.findMany({
+      where: { moduleId }
+    });
+  }
 }
 
 module.exports = new ResidentService();

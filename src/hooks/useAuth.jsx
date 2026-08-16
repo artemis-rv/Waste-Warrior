@@ -128,25 +128,22 @@ export function AuthProvider({ children }) {
   };
 
   const updateProfile = async (updates) => {
-    // This method purposefully remains on Supabase for Steps 5-7 as requested.
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+      const data = await fetchApi('/resident/profile', {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
 
-      if (error) throw error;
+      const updatedUser = data.user || data;
 
-      // Update the local state with the returned Supabase profile data
-      setUserProfile(data);
+      // Update the local state with the returned profile data
+      setUserProfile(updatedUser);
       toast({
         title: "Success!",
         description: "Profile updated successfully.",
       });
 
-      return { data, error: null };
+      return { data: updatedUser, error: null };
     } catch (error) {
       toast({
         title: "Error",
