@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
-import { supabase } from '@/integrations/supabase/client';
+import { socket } from '@/lib/socket';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,10 +30,12 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   const [uploadingEvidence, setUploadingEvidence] = useState(null);
 
   useEffect(() => {
+    let cleanup = () => {};
     if (user?.id) {
       fetchWorkerData();
-      subscribeToNotifications();
+      cleanup = subscribeToNotifications();
     }
+    return () => cleanup();
   }, [user]);
 
   const fetchWorkerData = async () => {
@@ -54,14 +56,12 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   };
 
   const subscribeToNotifications = () => {
-    const interval = setInterval(() => {
-      if (user?.id) {
-        fetchWorkerData();
-      }
-    }, 15000);
+    socket.on('worker-notifications', fetchWorkerData);
+    socket.on('report_updates', fetchWorkerData);
 
     return () => {
-      clearInterval(interval);
+      socket.off('worker-notifications', fetchWorkerData);
+      socket.off('report_updates', fetchWorkerData);
     };
   };
 
@@ -75,12 +75,11 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
         updateData.resolved_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from('reports')
-        .update(updateData)
-        .eq('id', reportId);
-
-      if (error) throw error;
+      await fetchApi(`/worker/pickups/${reportId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
 
       toast.success(t('worker.statusUpdated'));
       fetchWorkerData();

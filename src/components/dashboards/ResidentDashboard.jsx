@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { socket } from '@/lib/socket';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -55,10 +56,12 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
   
 
   useEffect(() => {
+    let cleanup = () => {};
     if (userProfile?.id) {
       fetchUserData();
-      setupRealtimeListeners();
+      cleanup = setupRealtimeListeners();
     }
+    return () => cleanup();
   }, [userProfile]);
 
   const fetchUserData = async () => {
@@ -84,15 +87,12 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
   };
 
   const setupRealtimeListeners = () => {
-    // Realtime polling / fallback
-    const interval = setInterval(() => {
-      if (userProfile?.id) {
-        fetchUserData();
-      }
-    }, 15000);
+    socket.on('report_updates', fetchUserData);
+    socket.on('user_notifications', fetchUserData);
 
     return () => {
-      clearInterval(interval);
+      socket.off('report_updates', fetchUserData);
+      socket.off('user_notifications', fetchUserData);
     };
   };
 

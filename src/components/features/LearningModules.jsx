@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlayCircle, CheckCircle2, ArrowRight, BookOpen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
-import { supabase } from '@/integrations/supabase/client';
+
 import { toast } from 'sonner';
 import VideoPlayer from './VideoPlayer';
 import QuizModal from './QuizModal';
@@ -51,16 +51,11 @@ export default function LearningModules() {
 
   const handleVideoComplete = async (moduleId) => {
     try {
-      const { error } = await supabase
-        .from('user_learning_progress')
-        .upsert({
-          user_id: userProfile.id,
-          module_id: moduleId,
-          is_video_watched: true,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id, module_id' });
-
-      if (error) throw error;
+      await fetchApi('/resident/learning/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ moduleId })
+      });
       toast.success("Video completed! Quiz unlocked.");
       
       await fetchData();
@@ -76,19 +71,11 @@ export default function LearningModules() {
 
   const handleQuizPass = async (moduleId, score) => {
     try {
-      const { error } = await supabase
-        .from('user_learning_progress')
-        .upsert({
-          user_id: userProfile.id,
-          module_id: moduleId,
-          is_video_watched: true,
-          quiz_score: score,
-          is_completed: true,
-          completed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id, module_id' });
-
-      if (error) throw error;
+      await fetchApi('/resident/learning/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ moduleId, score })
+      });
 
       toast.success(`Module Completed! Score: ${score}%`);
       setActiveModuleForQuiz(null);

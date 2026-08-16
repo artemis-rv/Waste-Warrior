@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/integrations/supabase/client';
+
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,12 +141,7 @@ export default function LeaderboardAdmin() {
     }
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ credits: 0 })
-        .neq('id', '00000000-0000-0000-0000-000000000000');
-
-      if (error) throw error;
+      await fetchApi('/admin/leaderboard/reset', { method: 'POST' });
 
       toast({
         title: t('common.success'),
@@ -167,12 +162,11 @@ export default function LeaderboardAdmin() {
 
   const toggleGreenChampion = async (userId, currentStatus) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ is_green_champion: !currentStatus })
-        .eq('id', userId);
-
-      if (error) throw error;
+      await fetchApi(`/admin/users/${userId}/champion`, { 
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_green_champion: !currentStatus })
+      });
 
       toast({
         title: t('common.success'),

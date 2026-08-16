@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import { fetchApi } from '@/lib/api';
+import { socket } from '@/lib/socket';
+import { toast } from '@/hooks/use-toast';
 
 const AuthContext = createContext({});
 
@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
           setUserProfile(data.user); // Using backend response directly as profile
           // Create a mock session object for compatibility if some frontend component explicitly requires it
           setSession({ user: data.user });
+          socket.connect();
         }
       } catch (error) {
         // HTTP 401 unauthenticated is expected if no cookie
@@ -59,6 +60,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setUserProfile(data.user);
       setSession({ user: data.user });
+      socket.connect();
 
       toast({
         title: "Success!",
@@ -89,6 +91,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       setUserProfile(data.user);
       setSession({ user: data.user });
+      socket.connect();
 
       toast({
         title: "Welcome back!",
@@ -113,6 +116,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setSession(null);
       setUserProfile(null);
+      socket.disconnect();
       
       toast({
         title: "Signed out",

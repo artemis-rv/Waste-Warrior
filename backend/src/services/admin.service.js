@@ -1,4 +1,5 @@
 const prisma = require('../config/db');
+const { getIO } = require('../socket');
 
 class AdminService {
   async getDashboardStats() {
@@ -56,17 +57,29 @@ class AdminService {
   }
 
   async updateUserRole(userId, newRole) {
-    return await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { role: newRole }
     });
+    try {
+      getIO().to(`user:${userId}`).emit('user-updates', { event: 'ROLE_CHANGED', payload: newRole });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
+    return updatedUser;
   }
 
   async updateUserBan(userId, isBanned) {
-    return await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { isBanned }
     });
+    try {
+      getIO().to(`user:${userId}`).emit('user-updates', { event: 'BAN_STATUS_CHANGED', payload: isBanned });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
+    return updatedUser;
   }
 
   async getWorkers() {
@@ -103,13 +116,19 @@ class AdminService {
   }
 
   async assignPickup(reportId, workerId) {
-    return await prisma.report.update({
+    const report = await prisma.report.update({
       where: { id: reportId },
       data: {
         assignedWorkerId: workerId,
         status: 'assigned'
       }
     });
+    try {
+      getIO().to(`user:${workerId}`).emit('worker-notifications', { event: 'ASSIGNED', payload: report });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
+    return report;
   }
 
   async getCollectionPoints() {
@@ -268,7 +287,7 @@ class AdminService {
     return [];
   }
   async verifyReport(reportId, isVerified, verificationNotes) {
-    return await prisma.report.update({
+    const report = await prisma.report.update({
       where: { id: reportId },
       data: {
         isVerified,
@@ -276,6 +295,13 @@ class AdminService {
         verifiedAt: new Date()
       }
     });
+    try {
+      getIO().to(`user:${report.userId}`).emit('report_updates', { event: 'UPDATE', payload: report });
+      getIO().emit('leaderboard-updates', { event: 'UPDATE' });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
+    return report;
   }
 
   async createKit(data) {

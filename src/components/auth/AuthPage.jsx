@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+
 import WasteWarriorLogo from '@/assets/waste-warrior.jpg';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';

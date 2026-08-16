@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { Recycle, Bell, LogOut, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { fetchApi } from '@/lib/api';
-import { supabase } from '@/integrations/supabase/client';
+import { socket } from '@/lib/socket';
 import LanguageSelector from '@/components/ui/language-selector';
 import NotificationDropdown from '@/components/layout/NotificationDropdown';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,14 @@ export default function DashboardLayout({ children, activeSection, onSectionChan
   useEffect(() => {
     if (userProfile?.id) {
       fetchNotificationCount();
+      
+      socket.on('user_notifications', fetchNotificationCount);
+      socket.on('worker-notifications', fetchNotificationCount);
+
+      return () => {
+        socket.off('user_notifications', fetchNotificationCount);
+        socket.off('worker-notifications', fetchNotificationCount);
+      };
     }
   }, [userProfile]);
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
+import { socket } from '@/lib/socket';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,13 +32,10 @@ export default function LeaderboardDashboard() {
   useEffect(() => {
     fetchLeaderboardData();
     
-    // Polling interval for live updates
-    const interval = setInterval(() => {
-      fetchLeaderboardData();
-    }, 15000);
+    socket.on('leaderboard-updates', fetchLeaderboardData);
 
     return () => {
-      clearInterval(interval);
+      socket.off('leaderboard-updates', fetchLeaderboardData);
     };
   }, []);
 
@@ -61,10 +59,9 @@ export default function LeaderboardDashboard() {
       });
 
       setStats({
-        totalParticipants: allUsers.length,
-        totalPoints: allUsers.reduce((sum, u) => sum + (u.credits || 0), 0),
-        totalPickups: allUsers.reduce((sum, u) => sum + (u.totalReports || 0), 0),
-        activeStreak: 12
+        totalReports: res?.stats?.totalReports || 0,
+        totalUsers: res?.stats?.totalUsers || 0,
+        monthlyReports: res?.stats?.monthlyReports || 0
       });
     } catch (error) {
       console.error('Error fetching leaderboard from API:', error);
@@ -76,34 +73,6 @@ export default function LeaderboardDashboard() {
   };
 
 
-  const fetchStats = async () => {
-    try {
-      const { count: totalReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: totalUsers } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const { count: monthlyReports } = await supabase
-        .from('reports')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth.toISOString());
-
-      setStats({
-        totalReports: totalReports || 0,
-        totalUsers: totalUsers || 0,
-        monthlyReports: monthlyReports || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
 
   const renderLeaderboardList = (data) => (
     <motion.div

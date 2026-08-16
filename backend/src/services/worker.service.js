@@ -1,4 +1,5 @@
 const prisma = require('../config/db');
+const { getIO } = require('../socket');
 
 class WorkerService {
   async getDashboardData(workerId) {
@@ -73,6 +74,12 @@ class WorkerService {
     // We must map 'resolved' back to 'completed' for the frontend
     if (updated.status === 'resolved') updated.status = 'completed';
 
+    try {
+      getIO().to(`user:${report.userId}`).emit('report_updates', { event: 'UPDATE', payload: updated });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
+
     return updated;
   }
 
@@ -81,7 +88,7 @@ class WorkerService {
     if (!report) throw new Error('Report not found');
     if (report.assignedWorkerId !== workerId) throw new Error('Unauthorized');
 
-    return await prisma.report.update({
+    const updated = await prisma.report.update({
       where: { id: reportId },
       data: {
         evidencePhotoUrl: evidenceData.evidence_photo_url,
@@ -91,6 +98,15 @@ class WorkerService {
         status: 'in_progress' // Setting evidence usually moves it to in_progress
       }
     });
+
+    if (updated.status === 'resolved') updated.status = 'completed';
+    try {
+      getIO().to(`user:${report.userId}`).emit('report_updates', { event: 'UPDATE', payload: updated });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
+
+    return updated;
   }
 
   async markNotificationRead(workerId, notificationId) {

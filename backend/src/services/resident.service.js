@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { getIO } = require('../socket');
 
 class ResidentService {
   async updateProfile(userId, data) {
@@ -184,6 +185,13 @@ class ResidentService {
 
       return { report, creditsLog: creditLog, totalCredits: user.credits };
     });
+
+    try {
+      getIO().to(`user:${userId}`).emit('report_updates', { event: 'INSERT', payload: result.report });
+      getIO().emit('leaderboard-updates', { event: 'UPDATE' });
+    } catch (err) {
+      console.error('Socket emit error:', err);
+    }
 
     return result;
   }
