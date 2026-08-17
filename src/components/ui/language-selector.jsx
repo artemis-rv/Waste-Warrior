@@ -49,11 +49,11 @@ export default function LanguageSelector({ className = '', variant = 'outline' }
 
       <AnimatePresence>
         {isOpen && (
-          <DropdownMenuContent
-            align="end"
-            className="w-48 bg-background/95 backdrop-blur-sm border-border/50"
-            asChild
-          >
+            <DropdownMenuContent
+              align="end"
+              className="w-48 bg-white shadow-lg border border-gray-200 z-50"
+              asChild
+            >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

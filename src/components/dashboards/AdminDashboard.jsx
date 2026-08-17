@@ -15,10 +15,13 @@ import VisitVerification from '@/components/admin/sections/VisitVerification';
 import ExportReports from '@/components/admin/sections/ExportReports';
 import LearningProgressManagement from '@/components/admin/sections/LearningProgressManagement';
 import LanguageSelector from '@/components/ui/language-selector';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState('dashboard');
   const { t } = useTranslation();
+  const { userProfile } = useAuth();
 
   const renderSection = () => {
     switch (activeSection) {
@@ -59,10 +62,21 @@ export default function AdminDashboard() {
       />
       
       <div className="flex-1 overflow-auto">
-        {/* Top Bar with Language Selector */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-          <div className="flex justify-end items-center px-6 py-3">
+          <div className="flex justify-end items-center px-6 py-3 gap-4">
             <LanguageSelector />
+            <div className="flex items-center gap-3 pl-4 border-l">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold leading-none text-gray-900">{userProfile?.full_name || 'Admin User'}</p>
+                <p className="text-xs text-gray-500 mt-1 capitalize">{userProfile?.role || 'Administrator'}</p>
+              </div>
+              <Avatar className="h-9 w-9 border border-emerald-100 shadow-sm">
+                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${userProfile?.full_name || 'Admin'}&backgroundColor=059669`} />
+                <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">
+                  {userProfile?.full_name?.charAt(0).toUpperCase() || 'A'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
 
