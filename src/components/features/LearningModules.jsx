@@ -125,7 +125,8 @@ export default function LearningModules() {
         <div className="relative z-10 flex flex-col items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2 flex items-center gap-2 text-white">
-              {t('learning.hubTitle') || t('learning.title') || 'Learning Hub 🎓'}
+              <BookOpen className="w-8 h-8 text-yellow-300 inline-block shrink-0" />
+              <span>{t('learning.hubTitle') || t('learning.title') || 'Learning Hub'}</span>
               {certificate && <Badge className="bg-yellow-400 text-black hover:bg-yellow-500">{t('learning.certifiedWarrior') || 'Certified'}</Badge>}
             </h1>
             <p className="text-emerald-50 max-w-2xl text-lg">
@@ -151,8 +152,9 @@ export default function LearningModules() {
             <BookOpen className="w-8 h-8 text-emerald-600" />
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">{t('learning.noModules') || 'No modules available yet'}</h2>
-          <p className="text-gray-500 max-w-md text-sm leading-relaxed">
-            {t('learning.noModulesDesc') || 'Learning modules are being prepared and will be available here soon. Check back in a little while — your learning journey is about to begin! 🌱'}
+          <p className="text-gray-500 max-w-md text-sm leading-relaxed flex items-center justify-center gap-2">
+            <span>{t('learning.noModulesDesc') || 'Learning modules are being prepared and will be available here soon. Check back in a little while — your learning journey is about to begin!'}</span>
+            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
           </p>
         </div>
       ) : (

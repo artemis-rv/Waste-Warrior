@@ -148,7 +148,16 @@ export default function QuizModal({ module, onClose, onComplete }) {
                  <div className={`text-center p-6 rounded-2xl ${score >= 60 ? 'bg-emerald-100' : 'bg-red-100'}`}>
                     {score >= 60 ? <Trophy className="h-16 w-16 text-emerald-600 mx-auto mb-2" /> : <AlertCircle className="h-16 w-16 text-red-600 mx-auto mb-2" />}
                     <h2 className="text-2xl font-bold text-gray-900">{score}% Score</h2>
-                    <p className="text-gray-600">{score >= 60 ? 'You passed! 🎉' : 'Try again.'}</p>
+                    <p className="text-gray-600 flex items-center justify-center gap-1.5 font-medium">
+                      {score >= 60 ? (
+                        <>
+                          <Sparkles className="w-4 h-4 text-emerald-600" />
+                          <span>You passed!</span>
+                        </>
+                      ) : (
+                        'Try again.'
+                      )}
+                    </p>
                  </div>
 
                  {/* ANSWER REVIEW */}

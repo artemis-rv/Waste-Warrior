@@ -22,7 +22,8 @@ import {
   Users, 
   MapPin,
   Quote,
-  Award
+  Award,
+  MessageSquare
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { localizeNumber } from '@/lib/utils';
@@ -373,8 +374,9 @@ export default function ImpactPage() {
                         <span>{item.location}</span>
                       </div>
                     </div>
-                    <Badge className="bg-[#00A86B] text-white hover:bg-[#00A86B]/90">
-                      {t('impact.resolvedBadge') || 'Resolved! ✅'}
+                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold px-3 py-1 gap-1.5 inline-flex items-center">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{t('impact.resolvedBadge') || 'Resolved!'}</span>
                     </Badge>
                   </div>
                 </CardContent>
@@ -442,7 +444,10 @@ export default function ImpactPage() {
         className="space-y-6"
       >
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-gray-900">💬 {t('impact.testimonialsTitle') || 'What Our Community Says'}</h2>
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <MessageSquare className="w-8 h-8 text-emerald-600 shrink-0" />
+            <span>{t('impact.testimonialsTitle') || 'What Our Community Says'}</span>
+          </h2>
           <p className="text-gray-600">
             {t('impact.testimonialsSubtitle') || 'Hear from residents and workers making a difference'}
           </p>

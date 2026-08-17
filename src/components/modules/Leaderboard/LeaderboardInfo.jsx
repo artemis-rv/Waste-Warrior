@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
-import { Info, Trophy, Sparkles } from 'lucide-react';
+import { Info, Trophy, Sparkles, Award } from 'lucide-react';
 
 export default function LeaderboardInfo() {
   const { t } = useTranslation();
@@ -28,7 +28,8 @@ export default function LeaderboardInfo() {
               <div className="grid md:grid-cols-2 gap-6 text-sm md:text-base">
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg flex items-center gap-2 text-emerald-800">
-                    🧍 {t('leaderboard.howItWorks.residentsTitle')}
+                    <Award className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>{t('leaderboard.howItWorks.residentsTitle')}</span>
                   </h3>
                   <ul className="space-y-2 text-emerald-700/90">
                     <li className="flex items-start gap-2">
@@ -47,7 +48,8 @@ export default function LeaderboardInfo() {
                 </div>
                 <div className="space-y-3">
                   <h3 className="font-semibold text-lg flex items-center gap-2 text-emerald-800">
-                    🧑‍🔧 {t('leaderboard.howItWorks.workersTitle')}
+                    <Trophy className="w-5 h-5 text-amber-600 shrink-0" />
+                    <span>{t('leaderboard.howItWorks.workersTitle')}</span>
                   </h3>
                   <ul className="space-y-2 text-emerald-700/90">
                     <li className="flex items-start gap-2">

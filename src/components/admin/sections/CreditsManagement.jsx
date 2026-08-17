@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { fetchApi } from '@/lib/api';
+import { localizeNumber } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Coins, Plus, Minus } from 'lucide-react';
 
 export default function CreditsManagement() {
+  const { t, i18n } = useTranslation();
   const [users, setUsers] = useState([]);
   const [auditLog, setAuditLog] = useState([]);
   const [open, setOpen] = useState(false);
@@ -81,26 +84,26 @@ export default function CreditsManagement() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="bg-white/80 backdrop-blur-xl border border-emerald-500/15 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Coins className="h-5 w-5" />
-            Credits & Penalties Management
+          <CardTitle className="flex items-center gap-2 text-slate-900 text-xl font-bold">
+            <Coins className="h-5 w-5 text-emerald-600" />
+            {t('admin.credits') || 'Credits & Penalties Management'}
           </CardTitle>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
                 <Coins className="h-4 w-4 mr-2" />
-                Manage Credits
+                {t('admin.credits') || 'Manage Credits'}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add or Subtract Credits</DialogTitle>
+                <DialogTitle>{t('admin.credits') || 'Add or Subtract Credits'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label>Select User *</Label>
+                  <Label>{t('admin.users') || 'Select User'} *</Label>
                   <Select value={formData.userId} onValueChange={(val) => setFormData({...formData, userId: val})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Choose a user" />
@@ -108,7 +111,7 @@ export default function CreditsManagement() {
                     <SelectContent>
                       {users.map(user => (
                         <SelectItem key={user.id} value={user.id}>
-                          {user.full_name || user.email} ({user.credits || 0} credits)
+                          {user.full_name || user.email} ({localizeNumber(user.credits || 0, i18n.language)} {t('dashboard.credits')})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -116,7 +119,7 @@ export default function CreditsManagement() {
                 </div>
 
                 <div>
-                  <Label>Action Type *</Label>
+                  <Label>{t('worker.actions') || 'Action Type'} *</Label>
                   <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val})}>
                     <SelectTrigger>
                       <SelectValue />
@@ -124,14 +127,14 @@ export default function CreditsManagement() {
                     <SelectContent>
                       <SelectItem value="add">
                         <div className="flex items-center gap-2">
-                          <Plus className="h-4 w-4 text-green-500" />
-                          Add Credits
+                          <Plus className="h-4 w-4 text-emerald-600" />
+                          <span>Add Credits</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="subtract">
                         <div className="flex items-center gap-2">
                           <Minus className="h-4 w-4 text-red-500" />
-                          Subtract Credits (Penalty)
+                          <span>Subtract Credits (Penalty)</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -161,9 +164,9 @@ export default function CreditsManagement() {
 
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                    Cancel
+                    {t('common.cancel') || 'Cancel'}
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white">
                     {formData.type === 'add' ? 'Add Credits' : 'Apply Penalty'}
                   </Button>
                 </div>
@@ -172,24 +175,24 @@ export default function CreditsManagement() {
           </Dialog>
         </CardHeader>
         <CardContent>
-          <h3 className="text-lg font-semibold mb-4">Credit Audit Log</h3>
+          <h3 className="text-base font-bold text-slate-900 mb-4">{t('admin.recentActivity') || 'Credit Audit Log'}</h3>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Amount</TableHead>
+                <TableHead>{t('worker.date') || 'Date'}</TableHead>
+                <TableHead>{t('admin.userName') || 'User'}</TableHead>
+                <TableHead>{t('admin.actions') || 'Action'}</TableHead>
+                <TableHead>{t('dashboard.credits') || 'Amount'}</TableHead>
                 <TableHead>Reason</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {auditLog.map(log => (
                 <TableRow key={log.id}>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(log.created_at).toLocaleString()}
+                  <TableCell className="text-xs text-slate-600">
+                    {log.created_at ? new Date(log.created_at).toLocaleDateString(i18n.language) : '—'}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium text-slate-900">
                     {log.users?.full_name || log.users?.email || 'Unknown'}
                   </TableCell>
                   <TableCell>
@@ -198,11 +201,11 @@ export default function CreditsManagement() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <span className={log.amount > 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
-                      {log.amount > 0 ? '+' : ''}{log.amount}
+                    <span className={log.amount > 0 ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold'}>
+                      {log.amount > 0 ? '+' : ''}{localizeNumber(log.amount, i18n.language)}
                     </span>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">{log.reason}</TableCell>
+                  <TableCell className="max-w-xs truncate text-slate-700">{log.reason}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -298,14 +298,25 @@ const renderOverviewSection = () => (
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'overview':
-        return renderOverviewSection();
+        return (
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {renderOverviewSection()}
+          </motion.div>
+        );
       case 'report':
         return (
           <motion.div
             key="report"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
           >
             <Button 
               variant="ghost" 
@@ -322,23 +333,68 @@ const renderOverviewSection = () => (
         );
       case 'learning':
         return (
-          <motion.div key="learning" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div 
+            key="learning" 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
              <LearningPage />
           </motion.div>
         );
       case 'credits':
-        return <CreditsSystem userProfile={userProfile} />;
+        return (
+          <motion.div
+            key="credits"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <CreditsSystem userProfile={userProfile} />
+          </motion.div>
+        );
       case 'leaderboard':
-        return <LeaderboardDashboard />;
+        return (
+          <motion.div
+            key="leaderboard"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <LeaderboardDashboard />
+          </motion.div>
+        );
       case 'impact':
-        return <ImpactPage />;
+        return (
+          <motion.div
+            key="impact"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ImpactPage />
+          </motion.div>
+        );
       default:
-        return renderOverviewSection();
+        return (
+          <motion.div
+            key="default-overview"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {renderOverviewSection()}
+          </motion.div>
+        );
     }
   };
 
-  // Inside ResidentDashboard (1).jsx - CORRECTED return statement
-return (
+  return (
     <AnimatePresence mode="wait"> 
       {renderActiveSection()}
     </AnimatePresence> 

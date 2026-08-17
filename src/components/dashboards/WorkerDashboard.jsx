@@ -204,17 +204,17 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
   const renderSection = () => {
     switch (activeSection) {
       case 'profile':
-        return <ProfileSection />;
+        return <ProfileSection key="profile" />;
       case 'pickups':
-        return <PickupsSection />;
+        return <PickupsSection key="pickups" />;
       case 'progress':
-        return <ProgressSection />;
+        return <ProgressSection key="progress" />;
       case 'notifications':
-        return <NotificationsSection />;
+        return <NotificationsSection key="notifications" />;
       case 'support':
-        return <SupportSection />;
+        return <SupportSection key="support" />;
       default:
-        return <ProfileSection />;
+        return <PickupsSection key="default-pickups" />;
     }
   };
 
@@ -433,10 +433,10 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-4xl font-bold text-indigo-600">{completionRate}%</div>
+            <div className="text-4xl font-bold text-indigo-600">{localizeNumber(completionRate, i18n.language)}%</div>
             <Progress value={completionRate} className="h-3" />
             <p className="text-sm text-gray-600">
-              {completedReports.length} {t('worker.of')} {assignedReports.length} {t('worker.pickupsCompleted')}
+              {localizeNumber(completedReports.length, i18n.language)} {t('worker.of')} {localizeNumber(assignedReports.length, i18n.language)} {t('worker.pickupsCompleted')}
             </p>
           </CardContent>
         </Card>
@@ -451,15 +451,15 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('worker.todayPickups')}</span>
-              <span className="text-xl font-bold text-gray-900">{todayPickups.length}</span>
+              <span className="text-xl font-bold text-gray-900">{localizeNumber(todayPickups.length, i18n.language)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('worker.weeklyPickups')}</span>
-              <span className="text-xl font-bold text-gray-900">{weeklyPickups.length}</span>
+              <span className="text-xl font-bold text-gray-900">{localizeNumber(weeklyPickups.length, i18n.language)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">{t('worker.pending')}</span>
-              <span className="text-xl font-bold text-yellow-600">{pendingReports.length}</span>
+              <span className="text-xl font-bold text-yellow-600">{localizeNumber(pendingReports.length, i18n.language)}</span>
             </div>
           </CardContent>
         </Card>

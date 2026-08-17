@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Recycle, Gift, BarChart3, Medal, LogIn, Menu, X, Users, FileText, MapPin } from 'lucide-react';
+import { 
+  Recycle, Gift, BarChart3, Medal, LogIn, Menu, X, 
+  Users, FileText, MapPin, Sparkles, BookOpen 
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import WasteWarriorLogo from '@/assets/waste-warrior.jpg';
@@ -166,8 +169,9 @@ const Index = () => {
             className="flex flex-col items-center text-center max-w-[780px] w-full"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-1.5 px-[18px] py-[10px] rounded-full bg-[#ECFDF5]/85 border border-[#10B981]/25 text-[#059669] text-[14px] font-semibold mb-6">
-              <span>🌱</span> <span>Together for a cleaner tomorrow</span>
+            <div className="inline-flex items-center gap-2 px-[18px] py-[10px] rounded-full bg-[#ECFDF5]/85 border border-[#10B981]/25 text-[#059669] text-[14px] font-semibold mb-6 shadow-sm">
+              <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Together for a cleaner tomorrow</span>
             </div>
 
             {/* Headline */}
@@ -189,9 +193,10 @@ const Index = () => {
                 </Link>
               </Button>
               
-              <Button asChild variant="outline" className="w-full sm:w-auto h-[52px] px-[28px] bg-white/80 backdrop-blur hover:bg-white border-[1.5px] border-[#059669] text-[#059669] text-[16px] font-[600] rounded-[14px] transition-all">
+              <Button asChild variant="outline" className="w-full sm:w-auto h-[52px] px-[28px] bg-white/80 backdrop-blur hover:bg-white border-[1.5px] border-[#059669] text-[#059669] text-[16px] font-[600] rounded-[14px] transition-all flex items-center gap-2">
                 <Link to={user ? "/learning" : "/auth"}>
-                  Learning 📖
+                  <BookOpen className="w-4 h-4 mr-2 inline" />
+                  <span>Learning</span>
                 </Link>
               </Button>
             </div>
@@ -240,8 +245,9 @@ const Index = () => {
             transition={{ duration: 0.6 }}
             className="text-center max-w-2xl mx-auto mb-16"
           >
-            <h2 className="text-[32px] sm:text-[38px] font-[800] text-[#172033] tracking-tight mb-4">
-              Why Choose Waste Warrior? 🌿
+            <h2 className="text-[32px] sm:text-[38px] font-[800] text-[#172033] tracking-tight mb-4 flex items-center justify-center gap-2.5">
+              <span>Why Choose Waste Warrior?</span>
+              <Sparkles className="w-7 h-7 text-emerald-600 shrink-0" />
             </h2>
             <p className="text-[18px] text-[#64748B] leading-relaxed">
               Join a community-driven platform that makes waste management rewarding and impactful.

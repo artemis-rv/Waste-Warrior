@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Award,
   Star,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -220,8 +221,8 @@ export default function LeaderboardAdmin() {
         >
           <div>
             <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-3">
-              <Trophy className="h-10 w-10 text-primary" />
-              🧑‍💼 {t('leaderboard.management')}
+              <Trophy className="h-9 w-9 text-amber-500" />
+              <span>{t('leaderboard.management')}</span>
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">
               {t('leaderboard.manageDesc')}
@@ -423,8 +424,9 @@ export default function LeaderboardAdmin() {
         >
           <div className="inline-block">
             <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary to-transparent mb-3"></div>
-            <p className="text-base text-muted-foreground italic">
-              💚 {t('leaderboard.footerQuote')}
+            <p className="text-base text-muted-foreground italic flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span>{t('leaderboard.footerQuote')}</span>
             </p>
             <div className="h-1 w-full bg-gradient-to-r from-transparent via-secondary to-transparent mt-3"></div>
           </div>

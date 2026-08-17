@@ -7,7 +7,7 @@ import { localizeNumber } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Users, TrendingUp, Award } from 'lucide-react';
+import { Trophy, Users, TrendingUp, Award, Sparkles } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { useWindowSize } from '@/hooks/useWindowSize';
 import LeaderboardInfo from './LeaderboardInfo';
@@ -243,8 +243,9 @@ export default function LeaderboardDashboard() {
         >
           <div className="inline-block">
             <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary to-transparent mb-4"></div>
-            <p className="text-lg md:text-xl text-muted-foreground italic font-medium">
-              💚 {t('leaderboard.quote')}
+            <p className="text-lg md:text-xl text-muted-foreground italic font-medium flex items-center justify-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-600" />
+              <span>{t('leaderboard.quote')}</span>
             </p>
             <div className="h-1 w-full bg-gradient-to-r from-transparent via-secondary to-transparent mt-4"></div>
           </div>

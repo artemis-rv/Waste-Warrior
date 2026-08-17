@@ -16,19 +16,19 @@ export default function DashboardPage() {
   const { t } = useTranslation();
 
   const residentNavLinks = [
-    { id: 'overview', label: t('dashboard.overview') || 'Overview' },
-    { id: 'report', label: t('dashboard.reportWaste') || 'Report Waste' },
-    { id: 'learning', label: t('dashboard.learning') || 'Learning' },
-    { id: 'credits', label: t('dashboard.credits') || 'Credits' },
-    { id: 'leaderboard', label: t('leaderboard.title') || 'Green Champions Leaderboard' },
-    { id: 'impact', label: t('dashboard.impact') || 'Impact' },
+    { id: 'overview', label: t('dashboard.overview') || 'Overview', icon: LayoutDashboard },
+    { id: 'report', label: t('dashboard.reportWaste') || 'Report Waste', icon: Camera },
+    { id: 'learning', label: t('dashboard.learning') || 'Learning', icon: BookOpen },
+    { id: 'credits', label: t('dashboard.credits') || 'Credits', icon: Coins },
+    { id: 'leaderboard', label: t('leaderboard.title') || 'Green Champions Leaderboard', icon: Award },
+    { id: 'impact', label: t('dashboard.impact') || 'Impact', icon: LineChart },
   ];
 
   const workerNavLinks = [
-    { id: 'pickups', label: t('worker.assignedPickups') || t('worker.dashboard') || 'Assigned Pickups' },
-    { id: 'progress', label: t('worker.progressTracker') || 'Progress Tracker' },
-    { id: 'notifications', label: t('worker.notifications') || 'Notifications' },
-    { id: 'support', label: t('worker.support') || 'Support & Help' },
+    { id: 'pickups', label: t('worker.assignedPickups') || t('worker.dashboard') || 'Assigned Pickups', icon: Truck },
+    { id: 'progress', label: t('worker.progressTracker') || 'Progress Tracker', icon: Target },
+    { id: 'notifications', label: t('worker.notifications') || 'Notifications', icon: Bell },
+    { id: 'support', label: t('worker.support') || 'Support & Help', icon: HelpCircle },
   ];
 
   // --- DETERMINE LINKS AND DEFAULT SECTION BASED ON ROLE ---

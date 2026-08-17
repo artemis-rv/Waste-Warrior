@@ -2,7 +2,7 @@
   "dashboard": {
     "youHave": "You have {{count}} {{label}}",
     "impact": "Impact",
-    "welcome": "Welcome back, {{name}}! 🌱",
+    "welcome": "Welcome back, {{name}}!",
     "welcomeSubtitle": "Ready to make a difference in your community today?",
     "greenPoints": "Green Points",
     "reportsLookup": "Reports Filed",
@@ -277,6 +277,15 @@
   },
   "reportForm": {
     "title": "Report Waste Issue",
+    "issueTitle": "Issue Title *",
+    "titlePlaceholder": "e.g., Overflowing garbage bin on Main Street",
+    "description": "Description *",
+    "descPlaceholder": "Please describe the waste issue in detail...",
+    "addressLabel": "Address / Location",
+    "addressPlaceholder": "Enter address or location details",
+    "photosLabel": "Photos (up to 3)",
+    "uploadHint": "Click to upload photos or drag and drop",
+    "getCurrentLocation": "Get current GPS location",
     "submit": "Submit Report",
     "submitting": "Submitting report...",
     "uploading": "Uploading images...",
@@ -324,7 +333,7 @@
     "sectionSubtitle": "Real transformations made possible by engaged citizens like you",
     "before": "Before",
     "after": "After",
-    "resolvedBadge": "Resolved! ✅",
+    "resolvedBadge": "Resolved!",
     "heroTitle": "Hero of the Month",
     "wardChampion": "Ward 5 Champion",
     "heroDescription": "Filed 30 resolved reports this month and inspired neighbors to join the movement. Their dedication to keeping the community clean has made a visible difference!",
@@ -402,7 +411,7 @@
     "workerPoint1": "Completing pickups on time",
     "workerPoint2": "Maintaining 5-star service ratings",
     "workerPoint3": "Reporting completed pickups",
-    "resetInfo": "Leaderboard resets automatically on the 1st of every month. Top performers receive a Green Champion Badge 🥇",
+    "resetInfo": "Leaderboard resets automatically on the 1st of every month. Top performers receive a Green Champion Badge",
     "howItWorks": {
       "title": "How the Green Champion Leaderboard Works",
       "residentsTitle": "Residents earn points by:",
@@ -413,7 +422,7 @@
       "workersPoint1": "Completing pickups on time (+40 pts)",
       "workersPoint2": "Maintaining 5-star service ratings (+30 pts)",
       "workersPoint3": "Reporting completed pickups (+20 pts)",
-      "note": "Leaderboard resets automatically on the 1st of every month. Top performers receive a Green Champion Badge 🥇"
+      "note": "Leaderboard resets automatically on the 1st of every month. Top performers receive a Green Champion Badge"
     },
     "badge": {
       "title": "Green Champion Badge",

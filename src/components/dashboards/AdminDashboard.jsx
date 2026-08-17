@@ -55,41 +55,54 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/30">
       <AdminSidebar 
         activeSection={activeSection} 
         onSectionChange={setActiveSection} 
       />
       
-      <div className="flex-1 overflow-auto">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-          <div className="flex justify-end items-center px-6 py-3 gap-4">
-            <LanguageSelector />
-            <div className="flex items-center gap-3 pl-4 border-l">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold leading-none text-gray-900">{userProfile?.full_name || 'Admin User'}</p>
-                <p className="text-xs text-gray-500 mt-1 capitalize">{userProfile?.role || 'Administrator'}</p>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <header className="sticky top-0 z-10 bg-white/75 backdrop-blur-xl border-b border-emerald-500/15 shadow-sm w-full">
+          <div className="flex justify-between items-center px-4 sm:px-6 py-3 h-20 gap-4">
+            
+            {/* Left title area for mobile */}
+            <div className="md:hidden flex items-center gap-2">
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Waste Warrior</h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-100/70 px-2 py-0.5 rounded-full">Admin</span>
+            </div>
+
+            <div className="hidden md:block"></div>
+
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <LanguageSelector />
+              <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-emerald-500/20 bg-white/50 px-3 py-1.5 rounded-2xl border">
+                <div className="text-right">
+                  <p className="text-sm font-bold leading-none text-slate-900">{userProfile?.full_name || 'Admin User'}</p>
+                  <p className="text-xs text-emerald-700 font-medium mt-1 capitalize">{userProfile?.role || 'Administrator'}</p>
+                </div>
+                <Avatar className="h-10 w-10 border-2 border-emerald-500/30 shadow-md">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${userProfile?.full_name || 'Admin'}&backgroundColor=059669`} />
+                  <AvatarFallback className="bg-emerald-100 text-emerald-800 font-bold">
+                    {userProfile?.full_name?.charAt(0).toUpperCase() || 'A'}
+                  </AvatarFallback>
+                </Avatar>
               </div>
-              <Avatar className="h-9 w-9 border border-emerald-100 shadow-sm">
-                <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${userProfile?.full_name || 'Admin'}&backgroundColor=059669`} />
-                <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">
-                  {userProfile?.full_name?.charAt(0).toUpperCase() || 'A'}
-                </AvatarFallback>
-              </Avatar>
             </div>
           </div>
-        </div>
+        </header>
 
-        <motion.div
-          key={activeSection}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-          className="p-6"
-        >
-          {renderSection()}
-        </motion.div>
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 relative z-0">
+          <motion.div
+            key={activeSection}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2 }}
+            className="max-w-7xl mx-auto pb-16"
+          >
+            {renderSection()}
+          </motion.div>
+        </main>
       </div>
     </div>
   );
