@@ -7,7 +7,9 @@ const router = express.Router();
 
 router.post('/register', authController.register);
 router.post('/login', loginLimiter, authController.login);
+router.post('/google', loginLimiter, authController.googleAuth);
 router.post('/logout', authController.logout);
 router.get('/me', authenticate, authController.getMe);
 
 module.exports = router;
+

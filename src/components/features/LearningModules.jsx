@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlayCircle, CheckCircle2, ArrowRight, BookOpen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
-
+import { localizeNumber } from '@/lib/utils';
 import { toast } from 'sonner';
 import VideoPlayer from './VideoPlayer';
 import QuizModal from './QuizModal';
@@ -14,6 +15,7 @@ import CertificateGenerator from './CertificateGenerator';
 
 export default function LearningModules() {
   const { userProfile } = useAuth();
+  const { t, i18n } = useTranslation();
   
   const [modules, setModules] = useState([]);
   const [userProgress, setUserProgress] = useState([]);
@@ -56,9 +58,16 @@ export default function LearningModules() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ moduleId })
       });
-      toast.success("Video completed! Quiz unlocked.");
+      toast.success(t('learning.videoCompletedToast') || "Video completed! Quiz unlocked.");
       
-      await fetchData();
+      setUserProgress(prev => {
+        const existing = prev.find(p => p.module_id === moduleId);
+        if (existing) {
+          return prev.map(p => p.module_id === moduleId ? { ...p, is_video_watched: true } : p);
+        }
+        return [...prev, { module_id: moduleId, is_video_watched: true, is_completed: false }];
+      });
+      
       setActiveModuleForVideo(null);
       
       const module = modules.find(m => m.id === moduleId);
@@ -71,17 +80,23 @@ export default function LearningModules() {
 
   const handleQuizPass = async (moduleId, score) => {
     try {
-      await fetchApi('/resident/learning/quiz', {
+      const res = await fetchApi('/resident/learning/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ moduleId, score })
       });
 
-      toast.success(`Module Completed! Score: ${score}%`);
+      toast.success(t('learning.quizPassedToast') || "Quiz passed! Module completed.");
       setActiveModuleForQuiz(null);
-      await fetchData();
       
-      checkForCertificate();
+      setUserProgress(prev => 
+        prev.map(p => p.module_id === moduleId ? { ...p, is_completed: true, score } : p)
+      );
+
+      if (res?.certificate) {
+        setCertificate(res.certificate);
+        toast.success(t('learning.certificateUnlockedToast') || "Congratulations! You earned your Waste Warrior Certificate!");
+      }
 
     } catch (error) {
       console.error(error);
@@ -89,24 +104,18 @@ export default function LearningModules() {
     }
   };
 
-  const checkForCertificate = async () => {
-     if (modules.length > 0 && userProgress.filter(p => p.is_completed).length === modules.length && !certificate) {
-         try {
-            const res = await fetchApi('/resident/learning/certificate', { method: 'POST' });
-            if(res.success) setCertificate(res.certificate);
-         } catch(e) {}
-     }
-  };
-
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       
-      {/* --- HERO SECTION FIXED --- */}
-      {/* Added Inline Style for Background Color */}
+      {/* --- HERO SECTION --- */}
       <div 
         className="relative overflow-hidden rounded-3xl p-8 text-white shadow-xl"
         style={{ background: 'linear-gradient(to right, #059669, #0d9488)' }} 
@@ -116,18 +125,18 @@ export default function LearningModules() {
         <div className="relative z-10 flex flex-col items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2 flex items-center gap-2 text-white">
-              Learning Hub 🎓
-              {certificate && <Badge className="bg-yellow-400 text-black hover:bg-yellow-500">Certified</Badge>}
+              {t('learning.hubTitle') || t('learning.title') || 'Learning Hub 🎓'}
+              {certificate && <Badge className="bg-yellow-400 text-black hover:bg-yellow-500">{t('learning.certifiedWarrior') || 'Certified'}</Badge>}
             </h1>
             <p className="text-emerald-50 max-w-2xl text-lg">
-              Watch videos, take quizzes, and earn your certificate. Become a certified Waste Warrior!
+              {t('learning.hubSubtitle') || t('learning.subtitle') || 'Watch videos, take quizzes, and earn your certificate. Become a certified Waste Warrior!'}
             </p>
           </div>
 
           {certificate && (
             <div className="mt-2">
               <CertificateGenerator 
-                userName={userProfile.full_name} 
+                userName={userProfile?.full_name || userProfile?.fullName} 
                 completionDate={certificate.issued_at} 
               />
             </div>
@@ -141,10 +150,9 @@ export default function LearningModules() {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
             <BookOpen className="w-8 h-8 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">No modules available yet</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">{t('learning.noModules') || 'No modules available yet'}</h2>
           <p className="text-gray-500 max-w-md text-sm leading-relaxed">
-            Learning modules are being prepared and will be available here soon. 
-            Check back in a little while — your learning journey is about to begin! 🌱
+            {t('learning.noModulesDesc') || 'Learning modules are being prepared and will be available here soon. Check back in a little while — your learning journey is about to begin! 🌱'}
           </p>
         </div>
       ) : (
@@ -188,16 +196,16 @@ export default function LearningModules() {
                      {/* Status Indicator */}
                      <div className="flex items-center gap-2 text-sm">
                         <Badge variant={isCompleted ? "success" : "secondary"} className={isCompleted ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}>
-                          {isCompleted ? 'Completed' : isVideoWatched ? 'Quiz Pending' : 'Not Started'}
+                          {isCompleted ? (t('learning.completed') || 'Completed') : isVideoWatched ? (t('learning.inProgress') || 'Quiz Pending') : (t('learning.notStarted') || 'Not Started')}
                         </Badge>
-                        <span className="text-gray-400 text-xs">• {module.duration_minutes} mins</span>
+                        <span className="text-gray-400 text-xs">• {localizeNumber(module.duration_minutes, i18n.language)} {t('learning.minutes') || 'mins'}</span>
                      </div>
                   </CardContent>
 
                   <CardFooter className="pt-0">
                     {isCompleted ? (
                       <Button variant="outline" className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50" disabled>
-                        <CheckCircle2 className="w-4 h-4 mr-2" /> Done
+                        <CheckCircle2 className="w-4 h-4 mr-2" /> {t('learning.completed') || 'Done'}
                       </Button>
                     ) : (
                       <Button 
@@ -210,7 +218,7 @@ export default function LearningModules() {
                           }
                         }}
                       >
-                        {isVideoWatched ? "Take Quiz" : "Start Learning"} <ArrowRight className="w-4 h-4 ml-2" />
+                        {isVideoWatched ? (t('learning.takeQuiz') || "Take Quiz") : (t('learning.startModule') || "Start Learning")} <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     )}
                   </CardFooter>

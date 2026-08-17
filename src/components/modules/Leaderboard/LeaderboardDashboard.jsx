@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
 import { socket } from '@/lib/socket';
+import { localizeNumber } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +14,7 @@ import LeaderboardInfo from './LeaderboardInfo';
 import LeaderboardCard from './LeaderboardCard';
 
 export default function LeaderboardDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { userProfile } = useAuth();
   const { width, height } = useWindowSize();
   const [activeTab, setActiveTab] = useState('residents');
@@ -147,7 +148,7 @@ export default function LeaderboardDashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3, type: 'spring' }}
               >
-                {stats.totalReports}
+                {localizeNumber(stats.totalReports, i18n.language)}
               </motion.div>
               <p className="text-sm text-muted-foreground mt-2 font-medium">{t('leaderboard.totalReports')}</p>
             </CardContent>
@@ -163,7 +164,7 @@ export default function LeaderboardDashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, type: 'spring' }}
               >
-                {stats.totalUsers}
+                {localizeNumber(stats.totalUsers, i18n.language)}
               </motion.div>
               <p className="text-sm text-black mt-2 font-medium">{t('leaderboard.greenChampions')}</p>
               
@@ -180,7 +181,7 @@ export default function LeaderboardDashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, type: 'spring' }}
               >
-                {stats.monthlyReports}
+                {localizeNumber(stats.monthlyReports, i18n.language)}
               </motion.div>
               <p className="text-sm text-muted-foreground mt-2 font-medium">{t('leaderboard.thisMonth')}</p>
             </CardContent>

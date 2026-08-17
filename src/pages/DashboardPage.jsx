@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ResidentDashboard from '@/components/dashboards/ResidentDashboard';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
@@ -10,44 +11,35 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Users, LayoutDashboard, Camera, BookOpen, Coins, Award, LineChart, Truck, Target, Bell, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// --- DEFINE NAVIGATION LINKS FOR EACH ROLE ---
-const residentNavLinks = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'report', label: 'Report Waste', icon: Camera },
-  { id: 'learning', label: 'Learning', icon: BookOpen },
-  { id: 'credits', label: 'Credits', icon: Coins },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Award },
-  { id: 'impact', label: 'Impact', icon: LineChart },
-];
-
-const workerNavLinks = [
-  { id: 'pickups', label: 'Assigned Pickups', icon: Truck },
-  { id: 'progress', label: 'Progress Tracker', icon: Target },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'support', label: 'Support & Help', icon: HelpCircle },
-];
-
-// --- (You can add Admin and ScrapDealer links here later) ---
-const adminNavLinks = [
-  // ... (e.g., { id: 'admin_overview', label: 'Admin Overview', icon: LayoutDashboard }) ...
-];
-
-
-
 export default function DashboardPage() {
   const { userProfile } = useAuth();
+  const { t } = useTranslation();
+
+  const residentNavLinks = [
+    { id: 'overview', label: t('dashboard.overview') || 'Overview' },
+    { id: 'report', label: t('dashboard.reportWaste') || 'Report Waste' },
+    { id: 'learning', label: t('dashboard.learning') || 'Learning' },
+    { id: 'credits', label: t('dashboard.credits') || 'Credits' },
+    { id: 'leaderboard', label: t('leaderboard.title') || 'Green Champions Leaderboard' },
+    { id: 'impact', label: t('dashboard.impact') || 'Impact' },
+  ];
+
+  const workerNavLinks = [
+    { id: 'pickups', label: t('worker.assignedPickups') || t('worker.dashboard') || 'Assigned Pickups' },
+    { id: 'progress', label: t('worker.progressTracker') || 'Progress Tracker' },
+    { id: 'notifications', label: t('worker.notifications') || 'Notifications' },
+    { id: 'support', label: t('worker.support') || 'Support & Help' },
+  ];
 
   // --- DETERMINE LINKS AND DEFAULT SECTION BASED ON ROLE ---
-  let navigationLinks = residentNavLinks; // Default to resident links
+  let navigationLinks = residentNavLinks;
   let defaultSection = 'overview';
 
   if (userProfile?.role === 'worker') {
     navigationLinks = workerNavLinks;
     defaultSection = 'pickups';
   } else if (userProfile?.role === 'admin') {
-    // navigationLinks = adminNavLinks; // Uncomment when ready
-    // defaultSection = 'admin_overview';
-    navigationLinks = residentNavLinks; // Fallback for now
+    navigationLinks = residentNavLinks;
   }
   
   // --- INITIALIZE STATE ---
@@ -57,6 +49,7 @@ export default function DashboardPage() {
   // the state updates to the correct default section.
   useEffect(() => {
     if (userProfile?.role) {
+
       if (userProfile.role === 'worker') {
         setActiveSection('pickups');
       } else if (userProfile.role === 'resident') {

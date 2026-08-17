@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
+import { localizeNumber } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import ReportForm from '@/components/forms/ReportForm';
 import CreditsSystem from '@/components/features/CreditsSystem';
@@ -42,7 +43,7 @@ import recyclingIllustration from '@/assets/recycling-illustration.png';
 
 export default function ResidentDashboard({activeSection, onSectionChange}) {
   const { userProfile } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [reports, setReports] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,10 +75,10 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
         totalReports: data.stats?.totalReports || 0,
         resolvedReports: data.stats?.resolvedReports || 0,
         pendingReports: data.stats?.pendingReports || 0,
-        totalCredits: data.stats?.totalCredits || userProfile?.credits || 0,
+        totalCredits: data.stats?.totalCredits ?? userProfile?.credits ?? 0,
       });
     } catch (error) {
-      console.error('Error fetching data from API:', error);
+      console.error('Error fetching resident dashboard data:', error);
       // Fallback gracefully without breaking UI
       setReports([]);
       setNotifications([]);
@@ -87,12 +88,14 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
   };
 
   const setupRealtimeListeners = () => {
-    socket.on('report_updates', fetchUserData);
-    socket.on('user_notifications', fetchUserData);
+    socket.on('report:created', fetchUserData);
+    socket.on('report:updated', fetchUserData);
+    socket.on('notification:new', fetchUserData);
 
     return () => {
-      socket.off('report_updates', fetchUserData);
-      socket.off('user_notifications', fetchUserData);
+      socket.off('report:created', fetchUserData);
+      socket.off('report:updated', fetchUserData);
+      socket.off('notification:new', fetchUserData);
     };
   };
 
@@ -100,7 +103,7 @@ export default function ResidentDashboard({activeSection, onSectionChange}) {
     if (!dateString) return '—';
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(i18n.language || 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const getStatusColor = (status) => {
@@ -170,7 +173,7 @@ const renderOverviewSection = () => (
            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
               <Coins className="w-6 h-6 text-green-600" />
            </div>
-           <h2 className="text-3xl font-bold text-gray-900">{stats.totalCredits}</h2>
+           <h2 className="text-3xl font-bold text-gray-900">{localizeNumber(stats.totalCredits, i18n.language)}</h2>
            <p className="text-gray-500 text-sm font-medium">{t('dashboard.greenPoints')}</p>
         </div>
 
@@ -179,7 +182,7 @@ const renderOverviewSection = () => (
            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
               <TrendingUp className="w-6 h-6 text-blue-600" />
            </div>
-           <h2 className="text-3xl font-bold text-gray-900">#{userProfile?.rank || "12"}</h2>
+           <h2 className="text-3xl font-bold text-gray-900">#{localizeNumber(userProfile?.rank || "12", i18n.language)}</h2>
            <p className="text-gray-500 text-sm font-medium">{t('leaderboard.yourRank')}</p>
         </div>
       </div>
@@ -187,9 +190,9 @@ const renderOverviewSection = () => (
       {/* --- STATS ROW --- */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { title: t('dashboard.reportsLookup') || "Reports Filed", value: stats.totalReports, icon: FileText, color: "#2563eb", bg: "#eff6ff" },
-          { title: t('learning.completed') || "Resolved", value: stats.resolvedReports, icon: CheckCircle, color: "#059669", bg: "#ecfdf5" },
-          { title: t('dashboard.pending') || "Pending", value: stats.pendingReports, icon: Clock, color: "#ea580c", bg: "#fff7ed" },
+          { title: t('dashboard.reportsLookup') || "Reports Filed", value: localizeNumber(stats.totalReports, i18n.language), icon: FileText, color: "#2563eb", bg: "#eff6ff" },
+          { title: t('learning.completed') || "Resolved", value: localizeNumber(stats.resolvedReports, i18n.language), icon: CheckCircle, color: "#059669", bg: "#ecfdf5" },
+          { title: t('dashboard.pending') || "Pending", value: localizeNumber(stats.pendingReports, i18n.language), icon: Clock, color: "#ea580c", bg: "#fff7ed" },
         ].map((stat, index) => (
           <div key={index} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
             <div>

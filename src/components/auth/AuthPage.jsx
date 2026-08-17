@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { X, Mail, Lock, User, Phone, Eye, EyeOff, Recycle, Leaf, Trophy, ShieldCheck, ArrowRight } from 'lucide-react';
 import LanguageSelector from '@/components/ui/language-selector';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +29,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
 
   // Handlers
   const handleSubmit = async (e) => {
@@ -50,6 +51,23 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (credentialResponse?.credential) {
+      setLoading(true);
+      try {
+        await signInWithGoogle(credentialResponse.credential);
+      } catch (err) {
+        console.error("Google login error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error("Google Sign-In failed or popup was closed");
   };
 
   const handleResetPassword = async (e) => {
@@ -125,10 +143,11 @@ export default function AuthPage() {
                 Waste Warrior
               </h1>
               <p className="text-[22px] font-medium text-gray-700 mb-6">
-                Turn waste into <span className="text-emerald-600 font-bold">impact.</span>
+                {t('auth.brandHeading') || 'Turn waste into'}{' '}
+                <span className="text-emerald-600 font-bold">{t('auth.brandHeadingSpan') || 'impact.'}</span>
               </p>
               <p className="text-[15px] text-gray-500 mb-10 leading-relaxed">
-                Report waste, earn rewards, and help build cleaner, greener communities.
+                {t('auth.brandSub') || 'Report waste, earn rewards, and help build cleaner, greener communities.'}
               </p>
               
               {/* Benefits */}
@@ -138,8 +157,8 @@ export default function AuthPage() {
                     <Recycle className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-[15px]">Report Waste</h3>
-                    <p className="text-[14px] text-gray-500 mt-0.5">Help identify and report waste in your area</p>
+                    <h3 className="font-bold text-gray-900 text-[15px]">{t('auth.reportWasteTitle') || 'Report Waste'}</h3>
+                    <p className="text-[14px] text-gray-500 mt-0.5">{t('auth.reportWasteDesc') || 'Help identify and report waste in your area'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -147,8 +166,8 @@ export default function AuthPage() {
                     <Leaf className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-[15px]">Earn Rewards</h3>
-                    <p className="text-[14px] text-gray-500 mt-0.5">Earn green credits for positive actions</p>
+                    <h3 className="font-bold text-gray-900 text-[15px]">{t('auth.earnRewardsTitle') || 'Earn Rewards'}</h3>
+                    <p className="text-[14px] text-gray-500 mt-0.5">{t('auth.earnRewardsDesc') || 'Earn green credits for positive actions'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -156,8 +175,8 @@ export default function AuthPage() {
                     <Trophy className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 text-[15px]">Become a Champion</h3>
-                    <p className="text-[14px] text-gray-500 mt-0.5">Climb the leaderboard and inspire others</p>
+                    <h3 className="font-bold text-gray-900 text-[15px]">{t('auth.championTitle') || 'Become a Champion'}</h3>
+                    <p className="text-[14px] text-gray-500 mt-0.5">{t('auth.championDesc') || 'Climb the leaderboard and inspire others'}</p>
                   </div>
                 </div>
               </div>
@@ -186,8 +205,8 @@ export default function AuthPage() {
                   animate={{ opacity: 1, x: 0 }}
                   className="w-full"
                 >
-                  <h2 className="text-[28px] font-bold text-gray-900 mb-2">Reset Password</h2>
-                  <p className="text-[15px] text-gray-500 mb-8">Enter your email to receive a reset link.</p>
+                  <h2 className="text-[28px] font-bold text-gray-900 mb-2">{t('auth.resetPasswordTitle') || 'Reset Password'}</h2>
+                  <p className="text-[15px] text-gray-500 mb-8">{t('auth.resetPasswordDesc') || 'Enter your email to receive a reset link.'}</p>
                   
                   {resetMessage && (
                     <div className={`p-3.5 rounded-xl text-sm mb-6 font-medium ${
@@ -199,7 +218,7 @@ export default function AuthPage() {
 
                   <form onSubmit={handleResetPassword} className="space-y-5">
                     <div>
-                      <label className="block text-[14px] font-semibold text-gray-700 mb-2">Email Address</label>
+                      <label className="block text-[14px] font-semibold text-gray-700 mb-2">{t('auth.emailAddress') || t('auth.email') || 'Email Address'}</label>
                       <div className="relative">
                         <Mail className="w-[18px] h-[18px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
@@ -218,7 +237,7 @@ export default function AuthPage() {
                       disabled={loading}
                       className="w-full h-[50px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm hover:-translate-y-[1px] transition-all flex items-center justify-center gap-2 mt-4"
                     >
-                      {loading ? 'Sending...' : 'Send Reset Link'}
+                      {loading ? (t('auth.sendingBtn') || 'Sending...') : (t('auth.sendResetLinkBtn') || t('auth.sendResetLink') || 'Send Reset Link')}
                     </button>
                   </form>
 
@@ -260,12 +279,12 @@ export default function AuthPage() {
                   {/* Header Texts */}
                   <div className="mb-6">
                     <h2 className="text-[28px] lg:text-[32px] font-bold text-gray-900">
-                      {isSignUp ? 'Create your account' : 'Welcome back'}
+                      {isSignUp ? (t('auth.createAccount') || 'Create your account') : (t('auth.welcomeBack') || 'Welcome back')}
                     </h2>
                     <p className="text-[14px] lg:text-[15px] text-gray-500 mt-1.5">
                       {isSignUp 
-                        ? 'Join the movement for cleaner communities.' 
-                        : 'Continue your journey toward a cleaner community.'}
+                        ? (t('auth.createAccountSub') || 'Join the movement for cleaner communities.') 
+                        : (t('auth.welcomeBackSub') || 'Continue your journey toward a cleaner community.')}
                     </p>
                   </div>
 
@@ -312,7 +331,7 @@ export default function AuthPage() {
                     </AnimatePresence>
 
                     <div>
-                      <label className="block text-[14px] font-semibold text-gray-700 mb-2">{t('worker.email') || 'Email Address'}</label>
+                      <label className="block text-[14px] font-semibold text-gray-700 mb-2">{t('auth.email') || t('auth.emailAddress') || 'Email'}</label>
                       <div className="relative">
                         <Mail className="w-[18px] h-[18px] text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
@@ -358,13 +377,13 @@ export default function AuthPage() {
                           >
                             <div className="pt-3 pb-1 flex flex-wrap gap-x-4 gap-y-2 text-[12px] font-medium">
                               <div className={`flex items-center gap-1.5 ${hasLength ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                <ShieldCheck className="w-[14px] h-[14px]" /> 8+ characters
+                                <ShieldCheck className="w-[14px] h-[14px]" /> {t('auth.charReq') || '8+ characters'}
                               </div>
                               <div className={`flex items-center gap-1.5 ${hasUpper ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                <ShieldCheck className="w-[14px] h-[14px]" /> One uppercase
+                                <ShieldCheck className="w-[14px] h-[14px]" /> {t('auth.upperReq') || 'One uppercase'}
                               </div>
                               <div className={`flex items-center gap-1.5 ${hasNumber ? 'text-emerald-600' : 'text-gray-400'}`}>
-                                <ShieldCheck className="w-[14px] h-[14px]" /> One number
+                                <ShieldCheck className="w-[14px] h-[14px]" /> {t('auth.numReq') || 'One number'}
                               </div>
                             </div>
                           </motion.div>
@@ -407,7 +426,7 @@ export default function AuthPage() {
                           </span>
                         ) : (
                           isSignUp ? (
-                            <>Join Waste Warrior <ArrowRight className="w-[18px] h-[18px]" /></>
+                            <>{t('auth.joinBtn') || 'Join Waste Warrior'} <ArrowRight className="w-[18px] h-[18px]" /></>
                           ) : (
                             <>{t('auth.signIn') || 'Sign In'} <ArrowRight className="w-[18px] h-[18px]" /></>
                           )
@@ -415,11 +434,33 @@ export default function AuthPage() {
                       </button>
                     </div>
                   </form>
+
+                  {/* Google OAuth Section */}
+                  <div className="mt-5 space-y-4">
+                    <div className="relative flex items-center justify-center">
+                      <div className="border-t border-gray-200 w-full"></div>
+                      <span className="bg-white px-3 text-[13px] text-gray-400 font-medium uppercase tracking-wider relative z-10">
+                        {t('auth.orContinueWith') || 'or'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-center w-full">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        shape="rectangular"
+                        size="large"
+                        width="100%"
+                        text={isSignUp ? "signup_with" : "signin_with"}
+                        theme="outline"
+                      />
+                    </div>
+                  </div>
                   
                   {/* Security Footer */}
                   <div className="mt-8 flex items-center justify-center gap-1.5 text-[12px] text-gray-500">
                     <ShieldCheck className="w-[14px] h-[14px] text-emerald-600" />
-                    <span>Your information is securely protected</span>
+                    <span>{t('auth.secureInfo') || 'Your information is securely protected'}</span>
                   </div>
                 </>
               )}

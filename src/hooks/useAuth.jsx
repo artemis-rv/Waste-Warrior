@@ -109,6 +109,34 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const signInWithGoogle = async (credential) => {
+    try {
+      const data = await fetchApi('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential }),
+      });
+
+      setUser(data.user);
+      setUserProfile(data.user);
+      setSession({ user: data.user });
+      socket.connect();
+
+      toast({
+        title: "Welcome!",
+        description: "Signed in with Google successfully.",
+      });
+
+      return { data, error: null };
+    } catch (error) {
+      toast({
+        title: "Google Sign In Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { data: null, error };
+    }
+  };
+
   const signOut = async () => {
     try {
       await fetchApi('/auth/logout', { method: 'POST' });
@@ -165,6 +193,7 @@ export function AuthProvider({ children }) {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     updateProfile,
   };

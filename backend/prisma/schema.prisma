@@ -52,7 +52,7 @@ enum PickupRequestStatus {
 model User {
   id              String   @id @db.Uuid // Matches auth.users(id)
   email           String   @unique
-  passwordHash    String   @map("password_hash")
+  passwordHash    String?  @map("password_hash")
   fullName        String?  @map("full_name")
   phone           String?
   role            UserRole @default(resident)

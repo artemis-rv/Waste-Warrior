@@ -25,6 +25,7 @@ import {
   Award
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { localizeNumber } from '@/lib/utils';
 import { 
   Carousel,
   CarouselContent,
@@ -82,6 +83,7 @@ const slideFromRight = {
 
 // Counter animation component
 const AnimatedCounter = ({ target, suffix = "" }) => {
+  const { i18n } = useTranslation();
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -103,103 +105,105 @@ const AnimatedCounter = ({ target, suffix = "" }) => {
     return () => clearInterval(timer);
   }, [target]);
 
-  return <span>{count.toLocaleString()}{suffix}</span>;
+  return <span>{localizeNumber(count, i18n.language)}{suffix}</span>;
 };
 
 // Gallery data
-const galleryItems = [
+const getGalleryItems = (t, lang) => [
   {
     id: 1,
-    title: "Overflowing Bin on Main Street",
-    location: "Ward 5",
-    beforeDesc: "Waste overflowing onto sidewalk",
-    afterDesc: "Clean and properly managed",
+    title: t('impact.gallery1_title') || "Overflowing Bin on Main Street",
+    location: `${t('impact.ward') || 'Ward'} ${localizeNumber(5, lang)}`,
+    beforeDesc: t('impact.gallery1_before') || "Waste overflowing onto sidewalk",
+    afterDesc: t('impact.gallery1_after') || "Clean and properly managed",
     image_before: oBin1,
     image_after: oBin2,
   },
   {
     id: 2,
-    title: "Illegal Dumping Site Cleaned",
-    location: "Ward 3",
-    beforeDesc: "Large pile of construction waste",
-    afterDesc: "Area restored and monitored",
+    title: t('impact.gallery2_title') || "Illegal Dumping Site Cleaned",
+    location: `${t('impact.ward') || 'Ward'} ${localizeNumber(3, lang)}`,
+    beforeDesc: t('impact.gallery2_before') || "Large pile of construction waste",
+    afterDesc: t('impact.gallery2_after') || "Area restored and monitored",
     image_before: illDump1,
     image_after: illDump2,
   },
   {
     id: 3,
-    title: "Park Restoration Project",
-    location: "Ward 7",
-    beforeDesc: "Littered recreational area",
-    afterDesc: "Beautiful community space",
+    title: t('impact.gallery3_title') || "Park Restoration Project",
+    location: `${t('impact.ward') || 'Ward'} ${localizeNumber(7, lang)}`,
+    beforeDesc: t('impact.gallery3_before') || "Littered recreational area",
+    afterDesc: t('impact.gallery3_after') || "Beautiful community space",
     image_before: parkR1,
     image_after: parkR2,
   },
   {
     id: 4,
-    title: "Broken Recycling Station Fixed",
-    location: "Ward 2",
-    beforeDesc: "Damaged and unusable bins",
-    afterDesc: "Fully functional station",
+    title: t('impact.gallery4_title') || "Broken Recycling Station Fixed",
+    location: `${t('impact.ward') || 'Ward'} ${localizeNumber(2, lang)}`,
+    beforeDesc: t('impact.gallery4_before') || "Damaged and unusable bins",
+    afterDesc: t('impact.gallery4_after') || "Fully functional station",
     image_before: damBin,
     image_after: fixBin,
   },
   {
     id: 5,
-    title: "Street Corner Cleanup",
-    location: "Ward 6",
-    beforeDesc: "Accumulated garbage pile",
-    afterDesc: "Pristine corner restored",
+    title: t('impact.gallery5_title') || "Street Corner Cleanup",
+    location: `${t('impact.ward') || 'Ward'} ${localizeNumber(6, lang)}`,
+    beforeDesc: t('impact.gallery5_before') || "Accumulated garbage pile",
+    afterDesc: t('impact.gallery5_after') || "Pristine corner restored",
     image_before: streetB1,
     image_after: streetB2,
   },
   {
     id: 6,
-    title: "Community Garden Revival",
-    location: "Ward 4",
-    beforeDesc: "Neglected and overgrown",
-    afterDesc: "Thriving green space",
+    title: t('impact.gallery6_title') || "Community Garden Revival",
+    location: `${t('impact.ward') || 'Ward'} ${localizeNumber(4, lang)}`,
+    beforeDesc: t('impact.gallery6_before') || "Neglected and overgrown",
+    afterDesc: t('impact.gallery6_after') || "Thriving green space",
     image_before: commCl1,
     image_after: commCl2,
   },
 ];
 
 // Testimonials data
-const testimonials = [
+const getTestimonials = (t) => [
   {
     id: 1,
-    text: "It's amazing to see how quickly our community responds. We're making a real difference!",
+    text: t('impact.testimonial1') || "It's amazing to see how quickly our community responds. We're making a real difference!",
     author: "Rajesh M.",
-    location: "Ward 3"
+    location: `${t('impact.ward') || 'Ward'} 3`
   },
   {
     id: 2,
-    text: "I reported an overflowing bin in the morning, and it was cleaned by the afternoon. This app actually works!",
+    text: t('impact.testimonial2') || "I reported an overflowing bin in the morning, and it was cleaned by the afternoon. This app actually works!",
     author: "Priya S.",
-    location: "Ward 10"
+    location: `${t('impact.ward') || 'Ward'} 10`
   },
   {
     id: 3,
-    text: "Finally, a way to make our voices heard! It feels good to be part of the solution, not just the problem.",
+    text: t('impact.testimonial3') || "Finally, a way to make our voices heard! It feels good to be part of the solution, not just the problem.",
     author: "Amit K.",
-    location: "Resident"
+    location: t('dashboard.overview') || "Resident"
   },
   {
     id: 4,
-    text: "As a worker, getting 'Thank You' notes in the app is really motivating. Glad to be helping!",
+    text: t('impact.testimonial4') || "As a worker, getting 'Thank You' notes in the app is really motivating. Glad to be helping!",
     author: "Team Worker",
     location: "Team Alpha"
   },
   {
     id: 5,
-    text: "My kids are now excited about spotting areas to clean up. We're earning points as a family!",
+    text: t('impact.testimonial5') || "My kids are now excited about spotting areas to clean up. We're earning points as a family!",
     author: "Sunita P.",
-    location: "Resident"
+    location: t('dashboard.overview') || "Resident"
   },
 ];
 
 export default function ImpactPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const galleryItems = getGalleryItems(t, i18n.language);
+  const testimonials = getTestimonials(t);
 
   return (
     <motion.div
@@ -408,7 +412,7 @@ export default function ImpactPage() {
               <div className="flex-1 space-y-4">
                 <div>
                   <h4 className="text-2xl font-bold text-gray-900">Manav Merja</h4>
-                  <p className="text-sm text-purple-600 font-medium">{t('impact.wardChampion') || 'Ward 5 Champion'}</p>
+                  <p className="text-sm text-purple-600 font-medium">{t('impact.wardChampion', { ward: localizeNumber(5, i18n.language) }) || `Ward ${localizeNumber(5, i18n.language)} Champion`}</p>
                 </div>
                 
                 <p className="text-gray-700 leading-relaxed">
@@ -417,10 +421,10 @@ export default function ImpactPage() {
                 
                 <div className="flex items-center gap-3">
                   <Badge className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 text-sm">
-                    {t('impact.reportsBadge', { count: 30 }) || '30 Reports'}
+                    {t('impact.reportsBadge', { count: localizeNumber(30, i18n.language) }) || `${localizeNumber(30, i18n.language)} Reports`}
                   </Badge>
                   <Badge className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm">
-                    {t('impact.pointsBadge', { count: 850 }) || '850 Points'}
+                    {t('impact.pointsBadge', { count: localizeNumber(850, i18n.language) }) || `${localizeNumber(850, i18n.language)} Points`}
                   </Badge>
                 </div>
               </div>

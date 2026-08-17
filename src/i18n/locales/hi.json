@@ -95,7 +95,8 @@
     "noNotifications": "अभी तक कोई सूचना नहीं",
     "evidenceUploaded": "साक्ष्य सफलतापूर्वक अपलोड किया गया",
     "evidenceWithGeo": "स्थान डेटा के साथ साक्ष्य अपलोड किया गया",
-    "statusUpdated": "स्थिति सफलतापूर्वक अपडेट की गई"
+    "statusUpdated": "स्थिति सफलतापूर्वक अपडेट की गई",
+    "email": "ईमेल"
   },
   "dealer": {
     "dashboard": "डैशबोर्ड",
@@ -203,12 +204,35 @@
   "auth": {
     "signIn": "लॉग इन करें",
     "signUp": "साइन अप करें",
-    "createAccount": "खाता बनाएं",
+    "createAccount": "अपना खाता बनाएं",
     "password": "पासवर्ड",
     "forgotPassword": "पासवर्ड भूल गए?",
     "backToLogin": "लॉग इन पर वापस जाएं",
     "resetPassword": "पासवर्ड रीसेट करें",
-    "sendResetLink": "रीसेट लिंक भेजें"
+    "sendResetLink": "रीसेट लिंक भेजें",
+    "email": "ईमेल",
+    "emailAddress": "ईमेल पता",
+    "welcomeBack": "वापसी पर स्वागत है",
+    "welcomeBackSub": "स्वच्छ समुदाय की दिशा में अपनी यात्रा जारी रखें।",
+    "createAccountSub": "स्वच्छ समुदायों के आंदोलन से जुड़ें।",
+    "joinBtn": "वेस्ट वॉरियर्स से जुड़ें",
+    "secureInfo": "आपकी जानकारी सुरक्षित रूप से संरक्षित है",
+    "charReq": "8+ वर्ण",
+    "upperReq": "एक बड़ा अक्षर",
+    "numReq": "एक संख्या",
+    "brandHeading": "कचरे को बदलें",
+    "brandHeadingSpan": "प्रभाव में।",
+    "brandSub": "कचरे की रिपोर्ट करें, पुरस्कार अर्जित करें और स्वच्छ समुदाय बनाएं।",
+    "reportWasteTitle": "कचरा रिपोर्ट करें",
+    "reportWasteDesc": "अपने क्षेत्र में कचरे की पहचान और रिपोर्ट करें",
+    "earnRewardsTitle": "पुरस्कार अर्जित करें",
+    "earnRewardsDesc": "सकारात्मक कार्यों के लिए ग्रीन क्रेडिट अर्जित करें",
+    "championTitle": "चैंपियन बनें",
+    "championDesc": "लीडरबोर्ड पर चढ़ें और दूसरों को प्रेरित करें",
+    "resetPasswordTitle": "पासवर्ड रीसेट करें",
+    "resetPasswordDesc": "रीसेट लिंक प्राप्त करने के लिए अपना ईमेल दर्ज करें।",
+    "sendResetLinkBtn": "रीसेट लिंक भेजें",
+    "sendingBtn": "भेजा जा रहा है..."
   },
   "reportForm": {
     "title": "कचरा रिपोर्ट करें",

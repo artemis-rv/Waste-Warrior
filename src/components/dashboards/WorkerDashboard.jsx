@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchApi } from '@/lib/api';
 import { socket } from '@/lib/socket';
+import { localizeNumber } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 
 export default function WorkerDashboard({ activeSection, onSectionChange }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, userProfile, signOut } = useAuth();
   const [assignedReports, setAssignedReports] = useState([]);
   const [workerProfile, setWorkerProfile] = useState(null);
@@ -63,6 +64,13 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
       socket.off('worker-notifications', fetchWorkerData);
       socket.off('report_updates', fetchWorkerData);
     };
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString(i18n.language || 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const updateReportStatus = async (reportId, newStatus, segregationDone = false) => {
@@ -263,7 +271,7 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-4xl font-bold text-purple-600">{userProfile?.credits || 0}</div>
+          <div className="text-4xl font-bold text-purple-600">{localizeNumber(userProfile?.credits || 0, i18n.language)}</div>
           <p className="text-sm text-gray-600 mt-2">{t('worker.creditsEarned')}</p>
         </CardContent>
       </Card>
@@ -282,7 +290,7 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
             <CardTitle className="text-sm font-medium text-gray-900">{t('worker.total')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{assignedReports.length}</div>
+            <div className="text-2xl font-bold text-gray-900">{localizeNumber(assignedReports.length, i18n.language)}</div>
           </CardContent>
         </Card>
         <Card className="bg-white shadow-lg">
@@ -290,7 +298,7 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
             <CardTitle className="text-sm font-medium text-gray-900">{t('worker.pending')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{pendingReports.length}</div>
+            <div className="text-2xl font-bold text-yellow-600">{localizeNumber(pendingReports.length, i18n.language)}</div>
           </CardContent>
         </Card>
         <Card className="bg-white shadow-lg">
@@ -298,7 +306,7 @@ export default function WorkerDashboard({ activeSection, onSectionChange }) {
             <CardTitle className="text-sm font-medium text-gray-900">{t('worker.completed')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{completedReports.length}</div>
+            <div className="text-2xl font-bold text-green-600">{localizeNumber(completedReports.length, i18n.language)}</div>
           </CardContent>
         </Card>
       </div>
