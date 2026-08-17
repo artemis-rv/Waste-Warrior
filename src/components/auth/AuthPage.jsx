@@ -88,24 +88,24 @@ export default function AuthPage() {
           </button>
         </div>
 
-        <div className="p-8 pt-16">
+        <div className="p-6 pt-12">
           
           {/* --- LOGO & HEADER --- */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-4">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring" }}
-              className="inline-block mb-3"
+              className="inline-block mb-1"
             >
               <img 
                 src={WasteWarriorLogo} 
                 alt="Waste Warrior Logo" 
-                className="w-20 h-20 rounded-full object-cover shadow-md border-4 border-emerald-100" 
+                className="w-16 h-16 rounded-full object-cover shadow-md border-4 border-emerald-100" 
               />
             </motion.div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Waste Warrior</h1>
-            <p className="text-gray-500 mt-2 text-sm">Building cleaner communities together</p>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Waste Warrior</h1>
+            <p className="text-gray-500 mt-1 text-sm">Building cleaner communities together</p>
           </div>
 
           {/* --- FORGOT PASSWORD VIEW --- */}
@@ -261,7 +261,7 @@ export default function AuthPage() {
                   type="submit"
                   disabled={loading}
                   style={{ backgroundColor: '#059669', color: '#ffffff', marginTop: '1rem' }}
-                  className="w-full py-3.5 font-bold rounded-lg shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed border border-transparent"
+                  className="w-full py-3 text-lg font-bold rounded-lg shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed border border-transparent"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
