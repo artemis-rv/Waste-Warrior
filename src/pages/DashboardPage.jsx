@@ -7,30 +7,29 @@ import ResidentDashboard from '@/components/dashboards/ResidentDashboard';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import WorkerDashboard from '@/components/dashboards/WorkerDashboard';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users } from 'lucide-react';
+import { Users, LayoutDashboard, Camera, BookOpen, Coins, Award, LineChart, Truck, Target, Bell, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // --- DEFINE NAVIGATION LINKS FOR EACH ROLE ---
 const residentNavLinks = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'report', label: 'Report Waste' },
-  { id: 'learning', label: 'Learning' },
-  { id: 'credits', label: 'Credits' },
-  { id: 'leaderboard', label: 'Green Champions Leaderboard' },
-  { id: 'impact', label: 'Impact' },
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'report', label: 'Report Waste', icon: Camera },
+  { id: 'learning', label: 'Learning', icon: BookOpen },
+  { id: 'credits', label: 'Credits', icon: Coins },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+  { id: 'impact', label: 'Impact', icon: LineChart },
 ];
 
 const workerNavLinks = [
-  { id: 'pickups', label: 'Assigned Pickups' },
-  { id: 'progress', label: 'Progress Tracker' },
-  { id: 'notifications', label: 'Notifications' },
-  { id: 'support', label: 'Support & Help' },
-  // 'Profile' is handled by the dropdown, so we don't need it here
+  { id: 'pickups', label: 'Assigned Pickups', icon: Truck },
+  { id: 'progress', label: 'Progress Tracker', icon: Target },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'support', label: 'Support & Help', icon: HelpCircle },
 ];
 
 // --- (You can add Admin and ScrapDealer links here later) ---
 const adminNavLinks = [
-  // ... (e.g., { id: 'admin_overview', label: 'Admin Overview' }) ...
+  // ... (e.g., { id: 'admin_overview', label: 'Admin Overview', icon: LayoutDashboard }) ...
 ];
 
 
