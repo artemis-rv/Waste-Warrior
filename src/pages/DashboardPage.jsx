@@ -67,53 +67,57 @@ export default function DashboardPage() {
         setActiveSection('dashboard');
       }
     }
-  }, [userProfile?.role]); // This runs only when the role changes/loads
+    }, [userProfile?.role]); // This runs only when the role changes/loads
 
-  const renderDashboard = () => {
-    if (!userProfile) {
-      // Keep your loading state consistent
-      return (
-        <div className="flex items-center justify-center min-h-64">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-8 h-8 border-4 border-[#00A86B] border-t-transparent rounded-full"
-          />
-        </div>
-      );
-    }
-
-    // Pass activeSection and onSectionChange down to the specific dashboard
-    switch (userProfile.role) {
-      case 'resident':
-        return <ResidentDashboard activeSection={activeSection} onSectionChange={setActiveSection} />;
-      case 'worker':
-        return <WorkerDashboard activeSection={activeSection} onSectionChange={setActiveSection} />;
-      case 'admin':
-        return <AdminDashboard activeSection={activeSection} onSectionChange={setActiveSection} />;
-        
-      default:
+    const renderDashboard = () => {
+      if (!userProfile) {
+        // Keep your loading state consistent
         return (
-          <Card>
-            <CardContent className="py-8">
-              <div className="text-center">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Unknown role: {userProfile.role}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-center min-h-64">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-8 h-8 border-4 border-[#00A86B] border-t-transparent rounded-full"
+            />
+          </div>
         );
-    }
-  };
+      }
 
-  // --- PASS THE 'navLinks' PROP TO THE LAYOUT ---
-  return (
-    <DashboardLayout 
-      activeSection={activeSection} 
-      onSectionChange={setActiveSection}
-      navLinks={navigationLinks} // <-- This prop now sends the correct links
-    >
-      {renderDashboard()}
-    </DashboardLayout>
-  );
-}
+      // Pass activeSection and onSectionChange down to the specific dashboard
+      switch (userProfile.role) {
+        case 'resident':
+          return <ResidentDashboard activeSection={activeSection} onSectionChange={setActiveSection} />;
+        case 'worker':
+          return <WorkerDashboard activeSection={activeSection} onSectionChange={setActiveSection} />;
+        case 'admin':
+          return <AdminDashboard activeSection={activeSection} onSectionChange={setActiveSection} />;
+          
+        default:
+          return (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Unknown role: {userProfile.role}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+      }
+    };
+
+    // --- PASS THE 'navLinks' PROP TO THE LAYOUT FOR NON-ADMINS ---
+    if (userProfile?.role === 'admin') {
+      return renderDashboard();
+    }
+
+    return (
+      <DashboardLayout 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection}
+        navLinks={navigationLinks} // <-- This prop now sends the correct links
+      >
+        {renderDashboard()}
+      </DashboardLayout>
+    );
+  }

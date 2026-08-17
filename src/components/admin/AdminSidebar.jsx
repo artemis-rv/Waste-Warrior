@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
-import { Map, MapPin, Users, Award, Coins, Package, Briefcase, FileText, CheckSquare, Download, LayoutDashboard, BookOpen } from 'lucide-react';
+import { Map, MapPin, Users, Award, Coins, Package, Briefcase, FileText, CheckSquare, Download, LayoutDashboard, BookOpen, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from 'react-i18next';
-
+import WasteWarriorLogo from '@/assets/waste-warrior.jpg';
 export default function AdminSidebar({ activeSection, onSectionChange }) {
   const { t } = useTranslation();
+  const { signOut } = useAuth();
 
   const navigationItems = [
     { id: 'dashboard', label: t('admin.dashboard') || 'Dashboard', icon: LayoutDashboard },
@@ -23,20 +25,22 @@ export default function AdminSidebar({ activeSection, onSectionChange }) {
   ];
 
   return (
-    <div className="w-64 border-r bg-card h-full">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-bold text-primary flex items-center gap-2">
-          <LayoutDashboard className="h-6 w-6" />
-          {t('admin.dashboard') || 'Admin Panel'}
-        </h2>
+    <div className="w-64 border-r bg-card h-full relative">
+      <div className="p-6 border-b flex items-center gap-3 bg-emerald-50/50">
+        <img 
+          src={WasteWarriorLogo} 
+          alt="Waste Warrior Logo" 
+          className="w-10 h-10 rounded-full border border-emerald-200 shadow-sm shrink-0" 
+        />
+        <h2 className="text-lg font-bold text-gray-900 tracking-tight leading-tight">Waste Warrior</h2>
       </div>
-      
-      <ScrollArea className="h-[calc(100vh-5rem)]">
+
+      <ScrollArea className="h-[calc(100vh-10rem)]">
         <nav className="p-4 space-y-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
-            
+
             return (
               <motion.div
                 key={item.id}
@@ -56,6 +60,17 @@ export default function AdminSidebar({ activeSection, onSectionChange }) {
           })}
         </nav>
       </ScrollArea>
+
+      <div className="p-4 border-t absolute bottom-0 w-64 bg-card">
+        <Button
+          variant="destructive"
+          className="w-full justify-start gap-3 bg-red-50 hover:bg-red-100 text-red-600 border-none shadow-none"
+          onClick={signOut}
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="text-sm">{t('logout') || 'Logout'}</span>
+        </Button>
+      </div>
     </div>
   );
 }

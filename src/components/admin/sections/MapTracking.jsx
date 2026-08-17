@@ -1,56 +1,39 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { fetchApi } from '@/lib/api';
 import { toast } from 'sonner';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { Play, MapPin, Truck } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { MapPin, Truck } from 'lucide-react';
+
+// Define custom HTML markers using L.divIcon
+const createCustomIcon = (emoji, bgColor) => {
+  return new L.divIcon({
+    className: 'custom-leaflet-marker',
+    html: `<div style="background: ${bgColor}; color: white; padding: 6px; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 16px;">${emoji}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
+};
+
+const workerIcon = createCustomIcon('🚛', '#3b82f6');
+const completedReportIcon = createCustomIcon('📍', '#10b981');
+const pendingReportIcon = createCustomIcon('📍', '#f59e0b');
+const collectionPointIcon = createCustomIcon('🏢', '#8b5cf6');
 
 export default function MapTracking() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
   const [workers, setWorkers] = useState([]);
   const [reports, setReports] = useState([]);
   const [collectionPoints, setCollectionPoints] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState('all');
-  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
-
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    const mapboxToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN;
-    mapboxgl.accessToken = mapboxToken;
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [78.9629, 20.5937], // India center
-      zoom: 5
-    });
-
-    map.current.on('load', () => {
-      setMapReady(true);
-    });
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (mapReady && map.current) {
-      updateMapMarkers();
-    }
-  }, [mapReady, workers, reports, collectionPoints, selectedWorker]);
 
   const fetchData = async () => {
     try {
@@ -69,67 +52,9 @@ export default function MapTracking() {
     }
   };
 
-  const updateMapMarkers = () => {
-    if (!map.current) return;
-
-    // Clear existing markers
-    const existingMarkers = document.querySelectorAll('.mapboxgl-marker');
-    existingMarkers.forEach(marker => marker.remove());
-
-    // Add worker markers
-    const filteredWorkers = selectedWorker === 'all' 
-      ? workers 
-      : workers.filter(w => w.id === selectedWorker);
-
-    filteredWorkers.forEach(worker => {
-      if (worker.current_location_lat && worker.current_location_lng) {
-        const el = document.createElement('div');
-        el.className = 'worker-marker';
-        el.innerHTML = `<div style="background: #3b82f6; color: white; padding: 8px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🚛</div>`;
-        
-        new mapboxgl.Marker(el)
-          .setLngLat([worker.current_location_lng, worker.current_location_lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`
-            <strong>${worker.full_name || 'Worker'}</strong><br>
-            <small>Vehicle: ${worker.vehicle_id || 'N/A'}</small>
-          `))
-          .addTo(map.current);
-      }
-    });
-
-    // Add report markers
-    reports.forEach(report => {
-      if (report.location_lng && report.location_lat) {
-        const el = document.createElement('div');
-        el.innerHTML = `<div style="background: ${report.status === 'completed' ? '#10b981' : '#f59e0b'}; color: white; padding: 6px; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">📍</div>`;
-        
-        new mapboxgl.Marker(el)
-          .setLngLat([report.location_lng, report.location_lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`
-            <strong>${report.title}</strong><br>
-            <small>Status: ${report.status}</small>
-          `))
-          .addTo(map.current);
-      }
-    });
-
-    // Add collection point markers
-    collectionPoints.forEach(point => {
-      if (point.location_lng && point.location_lat) {
-        const el = document.createElement('div');
-        el.innerHTML = `<div style="background: #8b5cf6; color: white; padding: 8px; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">🏢</div>`;
-        
-        new mapboxgl.Marker(el)
-          .setLngLat([point.location_lng, point.location_lat])
-          .setPopup(new mapboxgl.Popup().setHTML(`
-            <strong>${point.name}</strong><br>
-            <small>${point.address}</small><br>
-            <small>Capacity: ${point.current_load}/${point.capacity}kg</small>
-          `))
-          .addTo(map.current);
-      }
-    });
-  };
+  const filteredWorkers = selectedWorker === 'all' 
+    ? workers 
+    : workers.filter(w => w.id === selectedWorker);
 
   return (
     <div className="space-y-4">
@@ -139,7 +64,7 @@ export default function MapTracking() {
             <MapPin className="h-5 w-5" />
             Map & Real-Time Tracking
           </CardTitle>
-          <CardDescription>Track workers, reports, and collection points in real-time</CardDescription>
+          <CardDescription>Track workers, reports, and collection points in real-time instantly without any API keys!</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
@@ -161,10 +86,73 @@ export default function MapTracking() {
             </Button>
           </div>
           
-          <div 
-            ref={mapContainer} 
-            className="w-full h-[600px] rounded-lg border"
-          />
+          <div className="w-full h-[600px] rounded-lg border overflow-hidden relative z-0">
+            <MapContainer 
+              center={[20.5937, 78.9629]} 
+              zoom={5} 
+              style={{ width: '100%', height: '100%', zIndex: 0 }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              
+              {/* Worker Markers */}
+              {filteredWorkers.map(worker => (
+                worker.current_location_lat && worker.current_location_lng && (
+                  <Marker 
+                    key={`worker-${worker.id}`}
+                    position={[worker.current_location_lat, worker.current_location_lng]}
+                    icon={workerIcon}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <strong>{worker.full_name || 'Worker'}</strong><br />
+                        <span className="text-gray-500">Vehicle: {worker.vehicle_id || 'N/A'}</span>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              ))}
+
+              {/* Report Markers */}
+              {reports.map(report => (
+                report.location_lat && report.location_lng && (
+                  <Marker 
+                    key={`report-${report.id}`}
+                    position={[report.location_lat, report.location_lng]}
+                    icon={report.status === 'completed' ? completedReportIcon : pendingReportIcon}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <strong>{report.title}</strong><br />
+                        <span className="text-gray-500">Status: {report.status}</span>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              ))}
+
+              {/* Collection Point Markers */}
+              {collectionPoints.map(point => (
+                point.location_lat && point.location_lng && (
+                  <Marker 
+                    key={`point-${point.id}`}
+                    position={[point.location_lat, point.location_lng]}
+                    icon={collectionPointIcon}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <strong>{point.name}</strong><br />
+                        <span className="text-gray-500">{point.address}</span><br />
+                        <span className="text-gray-500">Capacity: {point.current_load}/{point.capacity}kg</span>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              ))}
+            </MapContainer>
+          </div>
 
           <div className="mt-4 grid grid-cols-3 gap-4">
             <div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg">
