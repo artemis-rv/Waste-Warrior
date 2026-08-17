@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import AuthPage from "./components/auth/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import LearningPage from "./pages/LearningPage";
 import NotFound from "./pages/NotFound";
 
 
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              <Route path="/learning" element={<ProtectedRoute><LearningPage /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
